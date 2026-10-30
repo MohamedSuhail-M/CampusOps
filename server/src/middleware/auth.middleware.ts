@@ -64,14 +64,14 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const roles = user.userRoles.map((ur) => ({
+    const roles = user.userRoles.map((ur: any) => ur.role.name);
       id: ur.role.id,
       code: ur.role.code,
       name: ur.role.name,
     }));
 
     // Verify active role is still valid for this user
-    const hasActiveRole = roles.some((r) => r.code === session.activeRole);
+    const hasPermission = roles.some((r: any) => allowedRoles.includes(r));
     const activeRole = hasActiveRole ? session.activeRole : roles[0]?.code || 'STUDENT';
 
     req.user = {
