@@ -23,8 +23,11 @@ const PORT = process.env.PORT || 4000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(cors({
-  origin: CLIENT_URL,
-  credentials: true,
+  origin: [
+    'http://localhost:5173',
+    /\.vercel\.app$/, // Permits Vercel production and preview deployments
+  ],
+  credentials: true
 }));
 
 app.use(express.json());
