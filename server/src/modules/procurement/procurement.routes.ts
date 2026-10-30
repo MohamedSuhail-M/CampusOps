@@ -1,7 +1,37 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import prisma from '../../prisma';
 import { authenticate, requireRole } from '../../middleware/auth.middleware';
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const uploadDir = path.resolve(__dirname, '../../../../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `pr-evidence-${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max per image
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed.'));
+    }
+  },
+});
 
 const router = Router();
 router.use(authenticate);
@@ -129,44 +159,90 @@ router.get(['/:id', '/requests/:id'], async (req: Request, res: Response) => {
 
 const createPrSchema = z
   .object({
-    workOrderId: z.string().optional(),
+    workOrderId: z.string().optional().nullable(),
     reason: z.string().optional(),
     justification: z.string().optional(),
     attachmentUrl: z.string().optional().nullable(),
+    itemId: z.string().optional(),
+    inventoryItemId: z.string().optional(),
+    quantity: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
     lines: z
-      .array(
-        z.object({
-          itemId: z.string().optional(),
-          inventoryItemId: z.string().optional(),
-          quantity: z.number().int().positive('Quantity must be greater than zero'),
-          estimatedUnitCost: z.number().positive().optional(),
-        })
-      )
-      .min(1, 'At least one item line is required'),
+      .union([
+        z.array(
+          z.object({
+            itemId: z.string().optional(),
+            inventoryItemId: z.string().optional(),
+            quantity: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]),
+            estimatedUnitCost: z.union([z.number(), z.string().transform(Number)]).optional(),
+          })
+        ),
+        z.string().transform((val) => {
+          try {
+            const parsed = JSON.parse(val);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }),
+      ])
+      .optional(),
   })
-  .transform((data) => ({
-    ...data,
-    reason: data.reason || data.justification || 'Hardware spares replacement',
-    lines: data.lines.map((l) => ({
-      ...l,
-      itemId: l.itemId || l.inventoryItemId || 'INV-NET-01',
-    })),
-  }));
+  .transform((data) => {
+    let rawLines = Array.isArray(data.lines) ? data.lines : [];
+    if (rawLines.length === 0 && (data.itemId || data.inventoryItemId)) {
+      rawLines = [
+        {
+          itemId: data.itemId || data.inventoryItemId,
+          quantity: data.quantity || 1,
+        },
+      ];
+    }
+    return {
+      ...data,
+      reason: data.reason || data.justification || 'Hardware spares replacement',
+      lines: rawLines.map((l: any) => ({
+        ...l,
+        itemId: l.itemId || l.inventoryItemId || 'ITM002',
+        quantity: Math.max(1, Number(l.quantity) || 1),
+      })),
+    };
+  })
+  .refine((data) => data.lines.length > 0, {
+    message: 'At least one item line is required for purchase request',
+  });
 
 /**
  * POST /api/procurement/requests
  * Creates a purchase request. If linked to a work order, marks work order as BLOCKED.
+ * Supports both JSON payloads (with optional attachmentUrl) and multipart/form-data.
  */
 router.post(
   '/requests',
   requireRole(['TECHNICIAN', 'FACILITIES_ADMIN', 'PROCUREMENT_MANAGER', 'SYSTEM_ADMIN']),
+  (req: Request, res: Response, next: any) => {
+    upload.any()(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            success: false,
+            error: { code: 'FILE_TOO_LARGE', message: 'Attached image exceeds the 5MB file size limit.' },
+          });
+        }
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_FILE', message: err.message || 'Invalid file attachment.' },
+        });
+      }
+      next();
+    });
+  },
   async (req: Request, res: Response) => {
     try {
       const parsed = createPrSchema.safeParse(req.body);
       if (!parsed.success) {
         res.status(400).json({
           success: false,
-          error: { code: 'VALIDATION_ERROR', details: parsed.error.format() },
+          error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0]?.message || 'Invalid request data', details: parsed.error.format() },
         });
         return;
       }
@@ -174,10 +250,75 @@ router.post(
       const { workOrderId, reason, lines, attachmentUrl } = parsed.data;
       const user = (req as any).user;
 
+      // Handle optional uploaded file from multipart form-data if present
+      let finalAttachmentUrl = attachmentUrl || null;
+      const uploadedFiles = req.files as Express.Multer.File[];
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        const file = uploadedFiles[0];
+        const evidenceId = `EVD-${Date.now()}-${Math.round(Math.random() * 1000)}`;
+        await prisma.evidence.create({
+          data: {
+            id: evidenceId,
+            uploadedBy: user.id,
+            storageKey: file.filename,
+            originalFilename: file.originalname,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+            createdAt: new Date(),
+          },
+        });
+        finalAttachmentUrl = `/api/intake/evidence/${evidenceId}`;
+      }
+
+      // Verify work order if specified (support both WO005 and WO-005 format)
+      let resolvedWorkOrderId: string | null = null;
+      if (workOrderId && typeof workOrderId === 'string' && workOrderId.trim()) {
+        const rawWoId = workOrderId.trim();
+        let wo = await prisma.workOrder.findUnique({ where: { id: rawWoId } });
+        if (!wo) {
+          const withoutDashes = rawWoId.replace(/-/g, '');
+          wo = await prisma.workOrder.findUnique({ where: { id: withoutDashes } });
+        }
+        if (!wo) {
+          const withDash = rawWoId.replace(/^([A-Za-z]+)(\d+)$/, '$1-$2');
+          wo = await prisma.workOrder.findUnique({ where: { id: withDash } });
+        }
+        if (!wo) {
+          res.status(400).json({
+            success: false,
+            error: { code: 'WORK_ORDER_NOT_FOUND', message: `Work Order '${rawWoId}' was not found in the database. Please verify the Work Order ID.` },
+          });
+          return;
+        }
+        resolvedWorkOrderId = wo.id;
+      }
+
       // Verify items exist and calculate estimated total
       let estimatedTotal = 0;
       for (const line of lines) {
-        const item = await prisma.inventoryItem.findUnique({ where: { id: line.itemId } });
+        let item = await prisma.inventoryItem.findUnique({ where: { id: line.itemId } });
+        if (!item) {
+          // Check by SKU or fuzzy match
+          item = await prisma.inventoryItem.findFirst({
+            where: {
+              OR: [
+                { sku: line.itemId },
+                { sku: line.itemId.replace(/^INV-/, '') },
+                { id: line.itemId.toUpperCase() },
+              ],
+            },
+          });
+        }
+        if (!item) {
+          // Map legacy mockup codes (INV-NET-01 -> NET-TRANSCEIVER, INV-ELE-02 -> ELEC-SOCKET-16A, INV-AV-01 -> HDMI-CABLE)
+          if (line.itemId.includes('NET')) {
+            item = await prisma.inventoryItem.findFirst({ where: { sku: 'NET-TRANSCEIVER' } });
+          } else if (line.itemId.includes('ELE') || line.itemId.includes('SOCKET')) {
+            item = await prisma.inventoryItem.findFirst({ where: { sku: 'ELEC-SOCKET-16A' } });
+          } else if (line.itemId.includes('AV') || line.itemId.includes('HDMI')) {
+            item = await prisma.inventoryItem.findFirst({ where: { sku: 'HDMI-CABLE' } });
+          }
+        }
         if (!item) {
           res.status(404).json({
             success: false,
@@ -185,8 +326,13 @@ router.post(
           });
           return;
         }
+        // Normalize line.itemId to real inventory item ID
+        line.itemId = item.id;
+
         if (line.estimatedUnitCost) {
           estimatedTotal += line.estimatedUnitCost * line.quantity;
+        } else if (item.unitCost) {
+          estimatedTotal += item.unitCost * line.quantity;
         }
       }
 
@@ -200,11 +346,11 @@ router.post(
           data: {
             id: prId,
             requesterId: user.id,
-            workOrderId: workOrderId || null,
+            workOrderId: resolvedWorkOrderId,
             status: 'PENDING_APPROVAL',
             estimatedTotal: estimatedTotal > 0 ? estimatedTotal : null,
             reason,
-            attachmentUrl: attachmentUrl || null,
+            attachmentUrl: finalAttachmentUrl,
           },
         });
 
@@ -223,28 +369,25 @@ router.post(
         }
 
         // 3. If workOrderId is provided, update Work Order to BLOCKED
-        if (workOrderId) {
-          const wo = await tx.workOrder.findUnique({ where: { id: workOrderId } });
-          if (wo) {
-            await tx.workOrder.update({
-              where: { id: workOrderId },
-              data: {
-                status: 'BLOCKED',
-                blockedReason: `Awaiting spare parts from Purchase Request ${prId}: ${reason}`,
-              },
-            });
+        if (resolvedWorkOrderId) {
+          await tx.workOrder.update({
+            where: { id: resolvedWorkOrderId },
+            data: {
+              status: 'BLOCKED',
+              blockedReason: `Awaiting spare parts from Purchase Request ${prId}: ${reason}`,
+            },
+          });
 
-            await tx.workOrderEvent.create({
-              data: {
-                id: `WOE-${timestamp}-${randomSuffix}`,
-                workOrderId,
-                actorId: user.id,
-                eventType: 'BLOCKED',
-                details: `Blocked pending procurement: ${reason} (PR: ${prId})`,
-                createdAt: new Date(),
-              },
-            });
-          }
+          await tx.workOrderEvent.create({
+            data: {
+              id: `WOE-${timestamp}-${randomSuffix}`,
+              workOrderId: resolvedWorkOrderId,
+              actorId: user.id,
+              eventType: 'BLOCKED',
+              details: `Blocked pending procurement: ${reason} (PR: ${prId})`,
+              createdAt: new Date(),
+            },
+          });
         }
 
         // 4. Audit Log
@@ -256,7 +399,7 @@ router.post(
             entityId: prId,
             action: 'CREATE',
             beforeJson: null,
-            afterJson: JSON.stringify({ prId, reason, lineCount: lines.length, estimatedTotal }),
+            afterJson: JSON.stringify({ prId, reason, lineCount: lines.length, estimatedTotal, workOrderId: resolvedWorkOrderId, attachmentUrl: finalAttachmentUrl }),
             createdAt: new Date(),
           },
         });

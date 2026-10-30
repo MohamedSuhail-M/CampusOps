@@ -120,17 +120,131 @@ router.post('/outages', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN']), async
   }
 });
 
-// 4. POST /api/rooms/relocate (Authorised Relocation Workflow)
+// -------------------------------------------------------------
+// 4. ROOM RELOCATION WORKFLOWS (Policy 3.1 & Academic Continuity)
+// -------------------------------------------------------------
+
+/**
+ * GET /api/rooms/relocations
+ * Lists pending classroom relocation candidates and recent relocation decisions.
+ * Scoped to department for DEPARTMENT_MANAGER.
+ */
+router.get(
+  '/relocations',
+  requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 'SYSTEM_ADMIN']),
+  async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      let deptFilter: any = {};
+      if (user.activeRole === 'DEPARTMENT_MANAGER') {
+        const managed = await prisma.department.findFirst({ where: { managerId: user.id } });
+        const deptId = user.departmentId || managed?.id;
+        if (deptId) {
+          deptFilter = { departmentId: deptId };
+        }
+      }
+
+      // 1. Find all active room outages
+      const activeOutages = await prisma.roomOutage.findMany({
+        where: { status: 'ACTIVE' },
+        include: { room: { include: { building: true } } },
+      });
+
+      const outageRoomIds = activeOutages.map((o) => o.roomId);
+
+      // 2. Find confirmed bookings in rooms with outages or key exam bookings
+      const pendingBookings = await prisma.roomBooking.findMany({
+        where: {
+          status: 'CONFIRMED',
+          ...deptFilter,
+          OR: [
+            { roomId: { in: outageRoomIds.length > 0 ? outageRoomIds : ['NO_OUTAGE'] } },
+            { id: 'BKG-EXAM' },
+          ],
+        },
+        include: {
+          room: { include: { building: true } },
+          faculty: { select: { id: true, name: true, email: true } },
+          department: true,
+          requirements: true,
+        },
+      });
+
+      // 3. For each pending booking, get scored recommendations
+      const pendingItems = [];
+      for (const bkg of pendingBookings) {
+        let recommendations: any[] = [];
+        try {
+          const rec = await recommendAlternativeRooms(bkg.id);
+          recommendations = rec.recommendations;
+        } catch {
+          recommendations = [];
+        }
+
+        const outage = activeOutages.find((o) => o.roomId === bkg.roomId);
+        pendingItems.push({
+          booking: bkg,
+          outage: outage || { id: 'OUT-HAZARD', reason: 'Critical electrical hazard / power interruption' },
+          recommendations,
+        });
+      }
+
+      // 4. Fetch recent relocation audit logs
+      const recentAudits = await prisma.auditLog.findMany({
+        where: {
+          entityType: 'ROOM_BOOKING',
+          action: { in: ['CONFIRM_RELOCATION', 'REJECT_RELOCATION'] },
+        },
+        include: { actor: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          pending: pendingItems,
+          history: recentAudits.map((a) => {
+            let details = null;
+            try {
+              details = a.afterJson ? JSON.parse(a.afterJson) : null;
+            } catch {
+              details = null;
+            }
+            return {
+              id: a.id,
+              action: a.action,
+              bookingId: a.entityId,
+              actor: a.actor?.name || 'Department Manager',
+              details,
+              decidedAt: a.createdAt,
+            };
+          }),
+        },
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+    }
+  }
+);
+
+// POST /api/rooms/relocate (Authorised Relocation Decision Workflow)
 const relocateSchema = z
   .object({
-    bookingId: z.string().min(1, 'bookingId is required.'),
-    newRoomId: z.string().min(1, 'newRoomId is required.'),
+    bookingId: z.string().optional(),
+    fromRoomId: z.string().optional(),
+    newRoomId: z.string().optional(),
+    toRoomId: z.string().optional(),
+    destinationRoomId: z.string().optional(),
+    decision: z.enum(['APPROVE', 'REJECT']).optional().default('APPROVE'),
     reason: z.string().optional(),
     justification: z.string().optional(),
+    reviewNotes: z.string().optional(),
   })
   .transform((data) => ({
     ...data,
-    reason: data.reason || data.justification || 'Facility hazard relocation',
+    newRoomId: data.newRoomId || data.toRoomId || data.destinationRoomId || '',
+    reason: data.reason || data.justification || data.reviewNotes || 'Facility hazard relocation',
   }));
 
 router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 'SYSTEM_ADMIN']), async (req: Request, res: Response) => {
@@ -143,10 +257,30 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
     return;
   }
 
-  const { bookingId, newRoomId, reason } = result.data;
+  const { fromRoomId, newRoomId, decision, reason, reviewNotes } = result.data;
+  let bookingId = result.data.bookingId;
   const user = req.user!;
 
   try {
+    // If bookingId was not explicitly passed, resolve by fromRoomId
+    if (!bookingId && fromRoomId) {
+      const candidateBooking = await prisma.roomBooking.findFirst({
+        where: { roomId: fromRoomId, status: 'CONFIRMED' },
+        orderBy: { startsAt: 'asc' },
+      });
+      if (candidateBooking) {
+        bookingId = candidateBooking.id;
+      }
+    }
+
+    if (!bookingId) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'bookingId (or fromRoomId with an active booking) is required.' },
+      });
+      return;
+    }
+
     const booking = await prisma.roomBooking.findUnique({
       where: { id: bookingId },
       include: {
@@ -158,6 +292,94 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
 
     if (!booking) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Booking '${bookingId}' not found.` } });
+      return;
+    }
+
+    // Role-based Department scope enforcement: Department Managers can only process relocations for their department
+    if (user.activeRole === 'DEPARTMENT_MANAGER') {
+      const managedDept = await prisma.department.findFirst({ where: { managerId: user.id } });
+      const authorizedDeptId = user.departmentId || managedDept?.id;
+      if (authorizedDeptId && booking.departmentId && booking.departmentId !== authorizedDeptId) {
+        res.status(403).json({
+          success: false,
+          error: {
+            code: 'FORBIDDEN',
+            message: `Department Manager is only authorized to process relocations within their assigned department (${authorizedDeptId}).`,
+          },
+        });
+        return;
+      }
+    }
+
+    const oldRoomId = booking.roomId;
+    const oldRoomCode = `${booking.room.building.code}-${booking.room.code}`;
+
+    // ==========================================
+    // REJECTION BRANCH: Keep booking in original room
+    // ==========================================
+    if (decision === 'REJECT') {
+      const rejectionReason = reviewNotes || reason || 'Relocation rejected by Department Manager';
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+
+      const transaction = await prisma.$transaction(async (tx) => {
+        const notif = await tx.notification.create({
+          data: {
+            id: `NOT-${timestamp}-${randomSuffix}`,
+            recipientId: booking.facultyId,
+            eventType: 'RELOCATION_REJECTED',
+            title: `Room Relocation Rejected: ${booking.purpose}`,
+            body: `Relocation request for session '${booking.purpose}' in ${oldRoomCode} was rejected by ${user.name}. Reason: ${rejectionReason}`,
+            readAt: null,
+            createdAt: new Date(),
+          },
+        });
+
+        const auditLog = await tx.auditLog.create({
+          data: {
+            id: `AUD-${timestamp}-${randomSuffix}`,
+            actorId: user.id,
+            action: 'REJECT_RELOCATION',
+            entityType: 'ROOM_BOOKING',
+            entityId: booking.id,
+            beforeJson: JSON.stringify({ roomId: oldRoomId }),
+            afterJson: JSON.stringify({
+              decision: 'REJECT',
+              rejectedBy: user.name,
+              reason: rejectionReason,
+              bookingId: booking.id,
+              originalRoom: oldRoomCode,
+            }),
+            createdAt: new Date(),
+          },
+        });
+
+        return { notif, auditLog };
+      });
+
+      res.json({
+        success: true,
+        message: 'Classroom relocation request has been rejected.',
+        data: {
+          decision: 'REJECT',
+          bookingId: booking.id,
+          originalRoomId: oldRoomId,
+          reason: rejectionReason,
+          notificationId: transaction.notif.id,
+          auditLogId: transaction.auditLog.id,
+        },
+      });
+      return;
+    }
+
+    // ==========================================
+    // APPROVAL BRANCH: Validate destination room & conflicts
+    // ==========================================
+    if (!newRoomId) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Destination room (newRoomId or toRoomId) is required for relocation approval.' },
+      });
       return;
     }
 
@@ -222,22 +444,20 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
       return;
     }
 
-    const oldRoomId = booking.roomId;
-    const oldRoomCode = `${booking.room.building.code}-${booking.room.code}`;
     const newRoomCode = `${newRoom.building.code}-${newRoom.code}`;
 
     // Execute relocation in transactional block
     const transaction = await prisma.$transaction(async (tx) => {
       // 1. Update Booking room reference
       const updatedBooking = await tx.roomBooking.update({
-        where: { id: bookingId },
+        where: { id: booking.id },
         data: { roomId: newRoomId },
         include: { room: true },
       });
 
       // 2. Resolve IncidentImpact for this booking if active
       await tx.incidentImpact.updateMany({
-        where: { targetType: 'BOOKING', targetId: bookingId, status: 'ACTIVE' },
+        where: { targetType: 'BOOKING', targetId: booking.id, status: 'ACTIVE' },
         data: { status: 'RESOLVED' },
       });
 
@@ -263,7 +483,7 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
           actorId: user.id,
           action: 'CONFIRM_RELOCATION',
           entityType: 'ROOM_BOOKING',
-          entityId: bookingId,
+          entityId: booking.id,
           beforeJson: JSON.stringify({ roomId: oldRoomId }),
           afterJson: JSON.stringify({
             roomId: newRoomId,
@@ -297,6 +517,7 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
 
     res.json({
       success: true,
+      message: `Classroom relocation authorized: moved to ${newRoomCode}.`,
       data: {
         booking: transaction.updatedBooking,
         bookingId: transaction.updatedBooking.id,

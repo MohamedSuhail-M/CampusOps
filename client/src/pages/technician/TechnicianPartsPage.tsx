@@ -7,11 +7,12 @@ import { LiveCameraModal } from '../../components/multimodal/LiveCameraModal';
 export const TechnicianPartsPage: React.FC = () => {
   const [requests, setRequests] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
+  const [workOrders, setWorkOrders] = useState<any[]>([]);
 
   // Form for New Purchase Request
-  const [selectedItemId, setSelectedItemId] = useState<string>('INV-NET-01');
+  const [selectedItemId, setSelectedItemId] = useState<string>('ITM002');
   const [quantity, setQuantity] = useState<number>(2);
-  const [workOrderId, setWorkOrderId] = useState<string>('WO-005');
+  const [workOrderId, setWorkOrderId] = useState<string>('WO005');
   const [reason, setReason] = useState<string>('Immediate replacement required for blocked hardware repair');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -22,16 +23,29 @@ export const TechnicianPartsPage: React.FC = () => {
 
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedPhotoPreview, setSelectedPhotoPreview] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [prRes, invRes] = await Promise.all([
+      const [prRes, invRes, woRes] = await Promise.all([
         apiFetch<any[]>('/api/procurement/requests'),
         apiFetch<any[]>('/api/inventory/items'),
+        apiFetch<any[]>('/api/work-orders'),
       ]);
       if (prRes.success && prRes.data) setRequests(prRes.data);
-      if (invRes.success && invRes.data) setInventory(invRes.data);
+      if (invRes.success && invRes.data) {
+        setInventory(invRes.data);
+        if (invRes.data.length > 0 && !selectedItemId) {
+          setSelectedItemId(invRes.data[0].id);
+        }
+      }
+      if (woRes.success && woRes.data) {
+        setWorkOrders(woRes.data);
+        if (woRes.data.length > 0 && !workOrderId) {
+          setWorkOrderId(woRes.data[0].id);
+        }
+      }
     } catch (e) {
       console.error(e);
     }
@@ -42,8 +56,22 @@ export const TechnicianPartsPage: React.FC = () => {
   }, []);
 
   const handleUploadFile = async (file: File) => {
-    setUploadingPhoto(true);
     setPhotoError(null);
+
+    // Validate type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Only JPEG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Image exceeds the 5MB file size limit.');
+      return;
+    }
+
+    setUploadingPhoto(true);
     try {
       const formData = new FormData();
       formData.append('photos', file);
@@ -67,30 +95,49 @@ export const TechnicianPartsPage: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleUploadFile(file);
+    // Reset file input so re-selecting same file triggers onChange
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleCreatePr = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+
     setSubmitting(true);
     setSuccessMsg(null);
+    setSubmitError(null);
+
     try {
+      const payload: any = {
+        lines: [{ itemId: selectedItemId, quantity: Math.max(1, Number(quantity)) }],
+        reason: reason.trim() || 'Immediate hardware spare replacement',
+      };
+
+      if (workOrderId && workOrderId.trim()) {
+        payload.workOrderId = workOrderId.trim();
+      }
+
+      if (photoUrl) {
+        payload.attachmentUrl = photoUrl;
+      }
+
       const res = await apiFetch('/api/procurement/requests', {
         method: 'POST',
-        body: JSON.stringify({
-          workOrderId,
-          lines: [{ inventoryItemId: selectedItemId, quantity: Number(quantity) }],
-          justification: reason,
-          attachmentUrl: photoUrl || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
+
       if (res.success) {
-        setSuccessMsg(`Purchase Request created successfully: ${res.data?.pr?.id || res.data?.id || 'PR-NEW'}`);
+        const prId = res.data?.id || res.data?.pr?.id || 'PR-NEW';
+        setSuccessMsg(`Purchase Request created successfully: ${prId}`);
         setPhotoUrl(null);
         setPhotoPreview(null);
+        setPhotoError(null);
         fetchData();
+      } else {
+        setSubmitError(res.error?.message || 'Failed to submit purchase request. Please check required fields.');
       }
     } catch (e: any) {
-      console.error(e);
+      setSubmitError(e.message || 'Network error submitting purchase request.');
     } finally {
       setSubmitting(false);
     }
@@ -98,14 +145,20 @@ export const TechnicianPartsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'TECHNICIAN', path: '/app/technician/work-orders' }, { label: 'PARTS & SPARES REQUESTS' }]} />
+      <Breadcrumbs
+        items={[
+          { label: 'CAMPUSOPS', path: '/' },
+          { label: 'TECHNICIAN', path: '/app/technician/work-orders' },
+          { label: 'PARTS & SPARES REQUESTS' },
+        ]}
+      />
 
       <div className="border-b border-[#2A2A2A] pb-4">
         <h1 className="text-2xl sm:text-3xl font-display font-bold uppercase tracking-tight text-brandCream">
-          Hardware Spares & Parts Requests
+          Hardware Spares &amp; Parts Requests
         </h1>
         <p className="text-xs sm:text-sm font-sans text-neutral-400 mt-1">
-          Submit purchase requests for depleted inventory to unblock pending work orders.
+          Submit purchase requests for depleted inventory to unblock pending work orders with optional defect photo evidence.
         </p>
       </div>
 
@@ -127,18 +180,19 @@ export const TechnicianPartsPage: React.FC = () => {
                 value={selectedItemId}
                 onChange={(e) => setSelectedItemId(e.target.value)}
                 className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-brandCream font-mono focus:border-brandLime"
+                required
               >
                 {inventory.length > 0 ? (
                   inventory.map((inv) => (
                     <option key={inv.id} value={inv.id}>
-                      {inv.name} (In Stock: {inv.quantityOnHand})
+                      {inv.name} (In Stock: {inv.quantityOnHand} {inv.unit})
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value="INV-NET-01">10G SFP+ Optical Transceiver (Stock: 0)</option>
-                    <option value="INV-ELE-02">16A Modular Socket (Stock: 4)</option>
-                    <option value="INV-AV-01">HDMI 4K Extender Cable (Stock: 1)</option>
+                    <option value="ITM002">Wi-Fi Network Transceiver (Stock: 2)</option>
+                    <option value="ITM001">16A Power Socket (Stock: 14)</option>
+                    <option value="ITM006">HDMI Cable (Stock: 18)</option>
                   </>
                 )}
               </select>
@@ -149,10 +203,11 @@ export const TechnicianPartsPage: React.FC = () => {
               <input
                 type="number"
                 min={1}
-                max={20}
+                max={50}
                 value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
                 className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-brandCream font-mono focus:border-brandLime"
+                required
               />
             </div>
 
@@ -164,18 +219,26 @@ export const TechnicianPartsPage: React.FC = () => {
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Why is this replacement needed?"
                 className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-brandCream font-mono focus:border-brandLime"
+                required
               />
             </div>
 
             <div>
-              <label className="block text-neutral-400 uppercase mb-1">Blocked Work Order ID:</label>
-              <input
-                type="text"
+              <label className="block text-neutral-400 uppercase mb-1">
+                Linked Work Order (Optional):
+              </label>
+              <select
                 value={workOrderId}
                 onChange={(e) => setWorkOrderId(e.target.value)}
-                placeholder="e.g. WO-005"
                 className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-2.5 text-xs text-brandCream font-mono focus:border-brandLime"
-              />
+              >
+                <option value="">(None - General Warehouse Spares)</option>
+                {workOrders.map((wo) => (
+                  <option key={wo.id} value={wo.id}>
+                    {wo.id} — {wo.incident?.title || wo.blockedReason || `Status: ${wo.status}`}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Optional Photo Attachment */}
@@ -217,6 +280,7 @@ export const TechnicianPartsPage: React.FC = () => {
                       onClick={() => {
                         setPhotoUrl(null);
                         setPhotoPreview(null);
+                        setPhotoError(null);
                       }}
                       className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-300 text-[10px] uppercase font-bold rounded"
                     >
@@ -245,25 +309,40 @@ export const TechnicianPartsPage: React.FC = () => {
                 </div>
               )}
               {uploadingPhoto && (
-                <p className="text-[10px] text-brandLime mt-1 animate-pulse">Uploading evidence...</p>
+                <p className="text-[10px] text-brandLime mt-1 animate-pulse">Uploading photo evidence...</p>
               )}
               {photoError && (
                 <p className="text-[10px] text-red-400 mt-1">{photoError}</p>
               )}
             </div>
 
+            {submitError && (
+              <div className="p-2.5 bg-red-950/50 border border-red-700/60 rounded-lg text-red-300 text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-red-400">error</span>
+                <span>{submitError}</span>
+              </div>
+            )}
+
             {successMsg && (
-              <div className="p-2.5 bg-emerald-950/40 border border-emerald-700/60 rounded-lg text-emerald-300 text-xs">
-                {successMsg}
+              <div className="p-2.5 bg-emerald-950/50 border border-emerald-700/60 rounded-lg text-emerald-300 text-xs flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-emerald-400">check_circle</span>
+                <span>{successMsg}</span>
               </div>
             )}
 
             <button
               type="submit"
-              disabled={submitting}
-              className="w-full mt-2 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-lg shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all"
+              disabled={submitting || uploadingPhoto}
+              className="w-full mt-2 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-lg shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {submitting ? 'Submitting PR...' : 'Submit Purchase Request'}
+              {submitting ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-brandDark border-t-transparent rounded-full animate-spin" />
+                  <span>Submitting PR...</span>
+                </>
+              ) : (
+                <span>Submit Purchase Request</span>
+              )}
             </button>
           </form>
         </div>
@@ -278,36 +357,45 @@ export const TechnicianPartsPage: React.FC = () => {
           </div>
 
           <div className="divide-y divide-[#2A2A2A]">
-            {requests.map((pr) => (
-              <div key={pr.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-brandLime">{pr.id}</span>
-                    <StatusBadge status={pr.status} />
-                  </div>
-                  <p className="text-xs text-brandCream font-medium">
-                    {pr.lines?.[0]?.item?.name || 'Hardware Spares'} ({pr.lines?.[0]?.quantity || 1} units)
-                  </p>
-                  <p className="text-[10px] font-mono text-neutral-500">
-                    Linked to Work Order: {pr.workOrderId || 'N/A'} • Submitted by {pr.requester?.name || 'Technician'}
-                  </p>
-                  {pr.attachmentUrl && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPhotoPreview(pr.attachmentUrl)}
-                      className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-brandLime hover:underline mt-1"
-                    >
-                      <span className="material-symbols-outlined text-xs">image</span>
-                      View Attached Photo
-                    </button>
-                  )}
-                </div>
-
-                <div className="text-right font-mono text-xs">
-                  <span className="text-neutral-400">{new Date(pr.createdAt).toLocaleDateString()}</span>
-                </div>
+            {requests.length === 0 ? (
+              <div className="py-12 text-center font-mono text-xs text-neutral-500">
+                No active purchase requests logged.
               </div>
-            ))}
+            ) : (
+              requests.map((pr) => (
+                <div key={pr.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-brandLime">{pr.id}</span>
+                      <StatusBadge status={pr.status} />
+                    </div>
+                    <p className="text-xs text-brandCream font-medium">
+                      {pr.lines?.[0]?.item?.name || 'Hardware Spares'} ({pr.lines?.[0]?.quantity || 1} units)
+                    </p>
+                    <p className="text-[10px] font-mono text-neutral-500">
+                      Linked to Work Order: {pr.workOrderId || 'N/A (General)'} • Submitted by {pr.requester?.name || 'Technician'}
+                    </p>
+                    {pr.attachmentUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPhotoPreview(pr.attachmentUrl)}
+                        className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-brandLime hover:underline mt-1"
+                      >
+                        <span className="material-symbols-outlined text-xs">image</span>
+                        View Defective Part Photo
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-right font-mono text-xs">
+                    <span className="text-neutral-500 block text-[10px] uppercase">Est. Total</span>
+                    <span className="font-bold text-brandCream">
+                      {pr.estimatedTotal ? `₹${pr.estimatedTotal.toLocaleString()}` : 'Pending Quote'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -330,23 +418,32 @@ export const TechnicianPartsPage: React.FC = () => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-[#141414] border-2 border-brandDark rounded-2xl p-5 max-w-lg w-full space-y-4 shadow-[8px_8px_0px_#0A0A0A]">
             <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-3">
-              <span className="font-display font-bold uppercase text-brandCream text-sm tracking-wider">
-                Defective Spare Part Attachment
+              <span className="font-display font-bold uppercase text-brandCream text-sm">
+                Defective Hardware Photo Evidence
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedPhotoPreview(null)}
-                className="text-neutral-400 hover:text-brandCream p-1"
+                className="p-1 hover:bg-[#2A2A2A] rounded-lg text-neutral-400 hover:text-brandCream"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
-            <div className="bg-[#0A0A0A] rounded-xl overflow-hidden border border-[#2A2A2A] flex items-center justify-center p-2">
+            <div className="rounded-xl overflow-hidden bg-black flex items-center justify-center max-h-96">
               <img
                 src={selectedPhotoPreview}
-                alt="Defective Spare Part"
-                className="max-h-80 w-auto rounded object-contain"
+                alt="Defective Spare Attachment"
+                className="max-h-96 object-contain"
               />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedPhotoPreview(null)}
+                className="px-4 py-2 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-lg"
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>

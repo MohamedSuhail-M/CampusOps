@@ -17,13 +17,19 @@ export interface ApiResponse<T = any> {
 export async function apiFetch<T = any>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  // Only default to application/json when body is not FormData (browser sets boundary for FormData)
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(url, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   });
 
   const json = await response.json().catch(() => ({
