@@ -55,6 +55,7 @@ model User {
   stockReceipts        StockReceipt[]
   notifications        Notification[]
   auditLogs            AuditLog[]
+  uploadedEvidences    Evidence[]
 
   @@map("users")
 }
@@ -213,9 +214,28 @@ model IntakeMessage {
   reporter          User?            @relation(fields: [reporterId], references: [id])
   externalMessageId String?          @map("external_message_id")
   receivedAt        DateTime         @default(now()) @map("received_at")
+  normalizedText    String?          @map("normalized_text")
+  inputMethod       String?          @default("TEXT") @map("input_method")
+  aiMetadata        String?          @map("ai_metadata")
   incidentReports   IncidentReport[]
+  evidence          Evidence[]
 
   @@map("intake_messages")
+}
+
+model Evidence {
+  id               String         @id
+  intakeMessageId  String?        @map("intake_message_id")
+  intakeMessage    IntakeMessage? @relation(fields: [intakeMessageId], references: [id], onDelete: Cascade)
+  uploadedBy       String?        @map("uploaded_by")
+  uploader         User?          @relation(fields: [uploadedBy], references: [id])
+  storageKey       String         @map("storage_key")
+  originalFilename String         @map("original_filename")
+  mimeType         String         @map("mime_type")
+  fileSize         Int            @map("file_size")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("evidence")
 }
 
 model Incident {

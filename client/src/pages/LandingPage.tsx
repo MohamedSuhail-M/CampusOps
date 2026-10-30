@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface LandingPageProps {
-  onSignIn: () => void;
+  onSignIn?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeScenario, setActiveScenario] = useState<1 | 2>(1);
   const [activeStep, setActiveStep] = useState<number>(1);
+
+  const handleSignIn = () => {
+    if (onSignIn) onSignIn();
+    else navigate('/login');
+  };
 
   const scenarioData = {
     1: {
@@ -210,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
           <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
-              onClick={onSignIn}
+              onClick={handleSignIn}
               className="inline-flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 font-display font-bold text-xs sm:text-sm uppercase tracking-wider text-brandDark bg-brandLime hover:bg-brandCream transition-all border border-brandDark shadow-[3px_3px_0px_#2A2A2A] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
             >
               <span className="flex items-center gap-1.5">
@@ -270,7 +277,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             </a>
             <button
               type="button"
-              onClick={onSignIn}
+              onClick={handleSignIn}
               className="w-full text-center py-2.5 bg-brandLime text-brandDark font-bold mt-2 border border-brandDark"
             >
               SIGN IN TO CONSOLE →
@@ -312,7 +319,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 w-full sm:w-auto">
                   <button
                     type="button"
-                    onClick={onSignIn}
+                    onClick={handleSignIn}
                     className="px-8 py-4 sm:px-10 sm:py-5 bg-brandLime text-brandDark font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-brandCream transition-all border-2 border-brandDark shadow-[4px_4px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
                   >
                     <span>LAUNCH OPERATION CONSOLE</span>
@@ -781,7 +788,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn }) => {
             </p>
             <button
               type="button"
-              onClick={onSignIn}
+              onClick={handleSignIn}
               className="px-10 py-5 bg-brandLime text-brandDark font-display font-bold text-base uppercase tracking-wider flex items-center justify-center gap-3 hover:bg-brandCream transition-all border-2 border-brandDark shadow-[4px_4px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 cursor-pointer mt-4"
             >
               <span>ENTER CAMPUSOPS PORTAL</span>

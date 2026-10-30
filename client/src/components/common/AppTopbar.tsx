@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { apiFetch } from '../../services/api';
+import { LanguageSelector } from './LanguageSelector';
 
 interface NotificationItem {
   id: string;
@@ -128,6 +129,9 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
             </select>
           </div>
         )}
+
+        {/* Language Selector */}
+        <LanguageSelector compact />
 
         {/* Notifications Icon Button */}
         <div className="relative">

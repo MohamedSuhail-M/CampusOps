@@ -179,12 +179,24 @@ router.get('/assets/lookup', async (req: Request, res: Response) => {
     return;
   }
 
+  let cleanTag = qrTag.trim();
+  if (cleanTag.includes('/')) {
+    const parts = cleanTag.split('/');
+    cleanTag = parts[parts.length - 1];
+  }
+  if (cleanTag.includes('=')) {
+    const parts = cleanTag.split('=');
+    cleanTag = parts[parts.length - 1];
+  }
+
   try {
     const asset = await prisma.asset.findFirst({
       where: {
         OR: [
-          { assetTag: qrTag.trim() },
-          { id: qrTag.trim() },
+          { assetTag: cleanTag },
+          { id: cleanTag },
+          { assetTag: { contains: cleanTag } },
+          { id: { contains: cleanTag } },
         ],
       },
       include: {

@@ -2,10 +2,13 @@ import React from 'react';
 
 interface MetricCardProps {
   category?: string;
-  title: string;
+  title?: string;
+  label?: string;
   value: string | number;
   subtitle?: string;
   badge?: string;
+  badgeText?: string;
+  badgeColor?: string;
   icon?: React.ReactNode;
   progress?: number;
   progressPercent?: number;
@@ -16,15 +19,20 @@ interface MetricCardProps {
 export const MetricCard: React.FC<MetricCardProps> = ({
   category,
   title,
+  label,
   value,
   subtitle,
   badge,
+  badgeText,
+  badgeColor,
   icon,
   progress,
   progressPercent,
   metaText,
   variant = 'cream',
 }) => {
+  const displayTitle = title || label || '';
+  const displayBadge = badge || badgeText;
   const isLime = variant === 'lime';
   const isDark = variant === 'dark';
 
@@ -73,7 +81,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           <span
             className={`font-display text-2xl uppercase font-bold mt-1 truncate ${titleStyles}`}
           >
-            {title}
+            {displayTitle}
           </span>
         </div>
 
@@ -97,23 +105,29 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {value}
         </span>
 
-        {(badge || metaText) && (
+        {(displayBadge || metaText) && (
           <div className="flex flex-col items-end shrink-0">
-            {badge && (
+            {displayBadge && (
               <span
                 className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                  isLime
+                  badgeColor === 'red'
+                    ? 'bg-red-900/60 text-red-300 border border-red-500'
+                    : badgeColor === 'amber'
+                    ? 'bg-amber-900/60 text-amber-300 border border-amber-500'
+                    : badgeColor === 'emerald'
+                    ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500'
+                    : isLime
                     ? 'bg-brandDark text-brandLime border border-brandDark'
                     : isDark
                     ? 'bg-brandLime text-brandDark border border-brandLime'
                     : 'bg-brandLime text-brandDark border border-brandDark'
                 }`}
               >
-                {badge}
+                {displayBadge}
               </span>
             )}
             {metaText && (
-              <span className="text-[11px] font-mono text-neutral-600 mt-1 font-medium">
+              <span className="text-[11px] font-mono text-neutral-400 mt-1 font-medium">
                 {metaText}
               </span>
             )}

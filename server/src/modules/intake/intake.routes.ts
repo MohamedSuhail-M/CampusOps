@@ -1,5 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
+import multer from 'multer';
 import prisma from '../../prisma';
 import { authenticate } from '../../middleware/auth.middleware';
 import { runOfflineTriage } from '../../services/triage.service';
@@ -9,11 +12,44 @@ const router = Router();
 
 router.use(authenticate);
 
+// Configure Uploads directory for photo evidence
+const uploadsDir = path.resolve(__dirname, '../../../../data/uploads/evidence');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `evidence-${uniqueSuffix}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max per image
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, and WebP images are allowed.'));
+    }
+  },
+});
+
 const submitIntakeSchema = z
   .object({
     originalText: z.string().optional(),
     message: z.string().optional(),
     channel: z.enum(['WEB', 'QR', 'EMAIL', 'VOICE']).default('WEB'),
+    language: z.string().optional(),
+    inputMethod: z.string().optional(),
+    evidenceIds: z.array(z.string()).optional().default([]),
     buildingId: z.string().optional().nullable(),
     roomId: z.string().optional().nullable(),
     assetTag: z.string().optional().nullable(),
@@ -30,6 +66,76 @@ const submitIntakeSchema = z
     originalText: data.originalText || data.message || '',
     assetTag: data.assetTag || data.assetId || null,
   }));
+
+// POST /api/intake/evidence (Multipart photo upload)
+router.post('/evidence', upload.array('photos', 3), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      res.status(400).json({ success: false, error: { code: 'NO_FILES', message: 'No photo files uploaded.' } });
+      return;
+    }
+
+    const user = req.user!;
+    const createdEvidences = [];
+
+    for (const f of files) {
+      const evidenceId = `EVD-${Date.now()}-${Math.round(Math.random() * 1000)}`;
+      const record = await prisma.evidence.create({
+        data: {
+          id: evidenceId,
+          uploadedBy: user.id,
+          storageKey: f.filename,
+          originalFilename: f.originalname,
+          mimeType: f.mimetype,
+          fileSize: f.size,
+          createdAt: new Date(),
+        },
+      });
+      createdEvidences.push(record);
+    }
+
+    res.status(201).json({
+      success: true,
+      data: createdEvidences,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'UPLOAD_ERROR', message: error.message || 'Failed to upload photo evidence.' },
+    });
+  }
+});
+
+// GET /api/intake/evidence/:id (Secure photo retrieval with path traversal safety)
+router.get('/evidence/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const evidence = await prisma.evidence.findUnique({
+      where: { id },
+    });
+
+    if (!evidence) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Evidence not found.' } });
+      return;
+    }
+
+    // Path traversal safety: extract basename only
+    const safeFilename = path.basename(evidence.storageKey);
+    const filePath = path.join(uploadsDir, safeFilename);
+
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ success: false, error: { code: 'FILE_NOT_FOUND', message: 'Attachment file not found on disk.' } });
+      return;
+    }
+
+    res.setHeader('Content-Type', evidence.mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(evidence.originalFilename)}"`);
+    fs.createReadStream(filePath).pipe(res);
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { code: 'ERROR', message: error.message } });
+  }
+});
 
 // POST /api/intake/triage-preview (Real-time preview without persisting)
 router.post('/triage-preview', async (req: Request, res: Response) => {
@@ -61,7 +167,16 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
     return;
   }
 
-  const { originalText, channel, buildingId: rawBuildingId, roomId: rawRoomId, assetTag } = result.data;
+  const {
+    originalText,
+    channel,
+    language: providedLang,
+    inputMethod: providedMethod,
+    evidenceIds,
+    buildingId: rawBuildingId,
+    roomId: rawRoomId,
+    assetTag,
+  } = result.data;
   const user = req.user!;
 
   try {
@@ -84,7 +199,7 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
       }
     }
 
-    // 2. Run deterministic offline triage
+    // 2. Run deterministic multilingual offline triage
     const triage = runOfflineTriage(originalText, resolvedBuildingId, resolvedRoomId, assetTag);
 
     // 3. If room wasn't provided, check if triage extracted a recognized room
@@ -103,7 +218,7 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
       }
     }
 
-    // 4. Validate resolvedRoomId against DB to ensure valid foreign key and resolve genuine buildingId
+    // 4. Validate resolvedRoomId against DB
     if (resolvedRoomId) {
       const dbRoom = await prisma.room.findFirst({
         where: {
@@ -142,7 +257,6 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
 
     // 7. Execute in transactional block to preserve consistency
     const transactionResult = await prisma.$transaction(async (tx) => {
-      // Unique message ID
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const timestamp = Date.now();
       const messageId = `MSG-${timestamp}-${randomSuffix}`;
@@ -152,11 +266,22 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
           id: messageId,
           channel,
           originalText,
-          language: 'en',
+          language: triage.detectedLanguage || providedLang || 'en',
+          inputMethod: providedMethod || (channel === 'VOICE' ? 'VOICE' : channel === 'QR' ? 'QR_TEXT' : 'TEXT'),
+          normalizedText: triage.normalizedText || null,
+          aiMetadata: JSON.stringify(triage),
           reporterId: user.id,
           receivedAt: new Date(),
         },
       });
+
+      // Link any uploaded evidence to this intake message
+      if (evidenceIds && evidenceIds.length > 0) {
+        await tx.evidence.updateMany({
+          where: { id: { in: evidenceIds } },
+          data: { intakeMessageId: intakeMessage.id },
+        });
+      }
 
       // Handle duplicate correlation vs new incident
       if (correlation.isDuplicate && correlation.matchedIncidentId) {
@@ -199,10 +324,18 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
         };
       }
 
-      // Create brand-new Incident
+      // Create NEW Incident
       const incidentId = `INC-${timestamp}-${randomSuffix}`;
-      const reference = `INC-2026-${String(randomSuffix).padStart(4, '0')}`;
-      const title = originalText.length > 60 ? `${originalText.substring(0, 57)}...` : originalText;
+      const reference = `INC-2026-${randomSuffix}`;
+
+      // Title Generation
+      let title = `${triage.category}: Reported in ${resolvedRoomId ? 'Room' : 'Campus'}`;
+      if (triage.extractedAssetType) {
+        title = `${triage.extractedAssetType} issue in ${triage.extractedRoomCode || 'campus'}`;
+      } else {
+        const words = originalText.trim().split(/\s+/).slice(0, 6).join(' ');
+        title = words.length > 0 ? `${words}...` : `${triage.category} Issue`;
+      }
 
       const newIncident = await tx.incident.create({
         data: {
@@ -304,6 +437,7 @@ router.get('/my-complaints', async (req: Request, res: Response) => {
     const messages = await prisma.intakeMessage.findMany({
       where: { reporterId: user.id },
       include: {
+        evidence: true,
         incidentReports: {
           include: {
             incident: {
@@ -328,9 +462,13 @@ router.get('/my-complaints', async (req: Request, res: Response) => {
         return {
           id: m.id,
           channel: m.channel,
+          language: m.language,
+          inputMethod: m.inputMethod,
           originalText: m.originalText,
+          normalizedText: m.normalizedText,
           receivedAt: m.receivedAt,
           relationshipType: report?.relationshipType || 'PRIMARY',
+          evidence: m.evidence,
           incident: inc
             ? {
                 id: inc.id,
@@ -351,6 +489,81 @@ router.get('/my-complaints', async (req: Request, res: Response) => {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch user complaints.', details: error.message },
     });
+  }
+});
+
+// GET /api/intake/:id (Detailed complaint fetch)
+router.get('/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const message = await prisma.intakeMessage.findFirst({
+      where: {
+        OR: [
+          { id },
+          { incidentReports: { some: { incident: { reference: id } } } },
+        ],
+      },
+      include: {
+        evidence: true,
+        incidentReports: {
+          include: {
+            incident: {
+              include: {
+                room: { include: { building: true } },
+                asset: true,
+                building: true,
+                workOrders: {
+                  include: {
+                    assignee: true,
+                    events: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!message) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Complaint record not found.' } });
+      return;
+    }
+
+    const report = message.incidentReports[0];
+    const inc = report?.incident;
+
+    res.json({
+      success: true,
+      data: {
+        id: message.id,
+        channel: message.channel,
+        originalText: message.originalText,
+        language: message.language,
+        inputMethod: message.inputMethod,
+        normalizedText: message.normalizedText,
+        aiMetadata: message.aiMetadata ? JSON.parse(message.aiMetadata) : null,
+        receivedAt: message.receivedAt,
+        evidence: message.evidence,
+        incident: inc
+          ? {
+              id: inc.id,
+              reference: inc.reference,
+              title: inc.title,
+              category: inc.category,
+              priority: inc.priority,
+              status: inc.status,
+              room: inc.room,
+              building: inc.building || inc.room?.building,
+              asset: inc.asset,
+              workOrders: inc.workOrders,
+            }
+          : null,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: { code: 'ERROR', message: error.message } });
   }
 });
 

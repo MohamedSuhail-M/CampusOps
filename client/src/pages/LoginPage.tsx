@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface LoginPageProps {
@@ -72,13 +73,21 @@ const ROLES = [
 ];
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   const [loginId, setLoginId] = useState('campus001');
   const [password, setPassword] = useState('password123');
   const [requestedRole, setRequestedRole] = useState('STUDENT');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect straight to /app
+  React.useEffect(() => {
+    if (user) {
+      navigate('/app', { replace: true });
+    }
+  }, [user, navigate]);
 
   const selectedRoleObj = ROLES.find((r) => r.code === requestedRole) || ROLES[0];
 
@@ -97,8 +106,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
     const result = await login(loginId, password, requestedRole);
     if (!result.success) {
       setError(result.error || 'Authentication failed. Please verify credentials.');
+      setLoading(false);
+    } else {
+      navigate('/app');
     }
-    setLoading(false);
   };
 
   return (
@@ -114,7 +125,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
 
         <div className="flex items-center gap-4 text-[10px]">
           <span className="hidden sm:inline text-neutral-500">TAMPER-EVIDENT RBAC DISPATCH</span>
-          {onBackToLanding && (
+          {onBackToLanding ? (
             <button
               type="button"
               onClick={onBackToLanding}
@@ -122,6 +133,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
             >
               ← PUBLIC BROADSHEET
             </button>
+          ) : (
+            <Link
+              to="/"
+              className="font-mono text-brandLime hover:underline uppercase font-bold"
+            >
+              ← PUBLIC BROADSHEET
+            </Link>
           )}
         </div>
       </header>

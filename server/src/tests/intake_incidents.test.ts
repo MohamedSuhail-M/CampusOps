@@ -23,6 +23,9 @@ describe('Intake, Triage & Incident Lifecycle Module', () => {
     adminCookie = adminLogin.headers['set-cookie'];
 
     // Clean up previous test-generated artifacts for RM-A-101
+    await prisma.workOrder.deleteMany({
+      where: { incident: { roomId: 'RM-A-101' } },
+    });
     await prisma.incidentReport.deleteMany({
       where: { incident: { roomId: 'RM-A-101' } },
     });

@@ -8,6 +8,11 @@ interface ActionModalProps {
   badge?: string;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  confirmText?: string;
+  confirmLabel?: string;
+  cancelText?: string;
+  onConfirm?: () => void;
+  loading?: boolean;
 }
 
 export const ActionModal: React.FC<ActionModalProps> = ({
@@ -18,6 +23,11 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   badge,
   children,
   maxWidth = 'xl',
+  confirmText,
+  confirmLabel,
+  cancelText = 'Cancel',
+  onConfirm,
+  loading = false,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,6 +97,29 @@ export const ActionModal: React.FC<ActionModalProps> = ({
 
         {/* Content Body */}
         <div className="mt-6">{children}</div>
+
+        {/* Footer Actions if onConfirm provided */}
+        {onConfirm && (
+          <div className="mt-6 pt-4 border-t-2 border-brandDark flex justify-end items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 border-2 border-brandDark rounded-lg font-mono text-xs uppercase font-bold text-brandDark hover:bg-neutral-200 transition-colors cursor-pointer"
+            >
+              {cancelText}
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={loading}
+              className="px-5 py-2 bg-brandLime border-2 border-brandDark rounded-lg font-mono text-xs uppercase font-bold text-brandDark hover:bg-[#b0dc28] transition-colors shadow-[2px_2px_0px_#0A0A0A] cursor-pointer flex items-center gap-2"
+            >
+              {loading && <span className="animate-spin text-sm">⌛</span>}
+              {confirmText || confirmLabel || 'Confirm'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
