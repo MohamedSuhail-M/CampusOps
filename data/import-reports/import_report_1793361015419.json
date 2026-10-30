@@ -1,0 +1,308 @@
+{
+  "roles": {
+    "table": "roles",
+    "totalRows": 7,
+    "inserted": 7,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "buildings": {
+    "table": "buildings",
+    "totalRows": 4,
+    "inserted": 4,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "skills": {
+    "table": "skills",
+    "totalRows": 6,
+    "inserted": 6,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "inventory_items": {
+    "table": "inventory_items",
+    "totalRows": 10,
+    "inserted": 10,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "sla_policies": {
+    "table": "sla_policies",
+    "totalRows": 4,
+    "inserted": 4,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "idempotency_keys": {
+    "table": "idempotency_keys",
+    "totalRows": 2,
+    "inserted": 2,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "departments": {
+    "table": "departments",
+    "totalRows": 5,
+    "inserted": 5,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "rooms": {
+    "table": "rooms",
+    "totalRows": 78,
+    "inserted": 78,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "users": {
+    "table": "users",
+    "totalRows": 38,
+    "inserted": 38,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "user_roles": {
+    "table": "user_roles",
+    "totalRows": 38,
+    "inserted": 38,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "assets": {
+    "table": "assets",
+    "totalRows": 242,
+    "inserted": 242,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "technician_skills": {
+    "table": "technician_skills",
+    "totalRows": 9,
+    "inserted": 9,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "staff_shifts": {
+    "table": "staff_shifts",
+    "totalRows": 80,
+    "inserted": 80,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "staff_leave": {
+    "table": "staff_leave",
+    "totalRows": 3,
+    "inserted": 3,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "room_bookings": {
+    "table": "room_bookings",
+    "totalRows": 141,
+    "inserted": 141,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "intake_messages": {
+    "table": "intake_messages",
+    "totalRows": 27,
+    "inserted": 27,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "room_requirements": {
+    "table": "room_requirements",
+    "totalRows": 193,
+    "inserted": 193,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "incidents": {
+    "table": "incidents",
+    "totalRows": 24,
+    "inserted": 24,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "room_outages": {
+    "table": "room_outages",
+    "totalRows": 2,
+    "inserted": 2,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "incident_reports": {
+    "table": "incident_reports",
+    "totalRows": 27,
+    "inserted": 27,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "incident_links": {
+    "table": "incident_links",
+    "totalRows": 2,
+    "inserted": 2,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "incident_impacts": {
+    "table": "incident_impacts",
+    "totalRows": 5,
+    "inserted": 5,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "work_orders": {
+    "table": "work_orders",
+    "totalRows": 24,
+    "inserted": 24,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "work_order_events": {
+    "table": "work_order_events",
+    "totalRows": 28,
+    "inserted": 28,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "maintenance_history": {
+    "table": "maintenance_history",
+    "totalRows": 2,
+    "inserted": 2,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "stock_reservations": {
+    "table": "stock_reservations",
+    "totalRows": 3,
+    "inserted": 3,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "purchase_requests": {
+    "table": "purchase_requests",
+    "totalRows": 4,
+    "inserted": 4,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "stock_movements": {
+    "table": "stock_movements",
+    "totalRows": 13,
+    "inserted": 13,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "purchase_request_lines": {
+    "table": "purchase_request_lines",
+    "totalRows": 4,
+    "inserted": 4,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "approval_decisions": {
+    "table": "approval_decisions",
+    "totalRows": 3,
+    "inserted": 3,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "stock_receipts": {
+    "table": "stock_receipts",
+    "totalRows": 1,
+    "inserted": 1,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "notifications": {
+    "table": "notifications",
+    "totalRows": 4,
+    "inserted": 4,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "outbox_events": {
+    "table": "outbox_events",
+    "totalRows": 3,
+    "inserted": 3,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  },
+  "audit_logs": {
+    "table": "audit_logs",
+    "totalRows": 6,
+    "inserted": 6,
+    "updated": 0,
+    "unchanged": 0,
+    "rejected": 0,
+    "errors": []
+  }
+}

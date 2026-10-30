@@ -1,0 +1,495 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// 1. IDENTITY & DIRECTORY
+// -------------------------------------------------------------
+
+model Role {
+  id        String     @id
+  code      String     @unique
+  name      String
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model Department {
+  id           String        @id
+  name         String
+  managerId    String?       @map("manager_id")
+  manager      User?         @relation("DepartmentManager", fields: [managerId], references: [id])
+  users        User[]        @relation("UserDepartment")
+  roomBookings RoomBooking[]
+
+  @@map("departments")
+}
+
+model User {
+  id                   String             @id
+  loginId              String             @unique @map("login_id")
+  passwordHash         String             @map("password_hash")
+  name                 String
+  email                String             @unique
+  departmentId         String             @map("department_id")
+  department           Department         @relation("UserDepartment", fields: [departmentId], references: [id])
+  status               String             @default("ACTIVE")
+  
+  managedDepartments   Department[]       @relation("DepartmentManager")
+  userRoles            UserRole[]
+  technicianSkills     TechnicianSkill[]
+  shifts               StaffShift[]
+  leaves               StaffLeave[]
+  facultyBookings      RoomBooking[]
+  intakeMessages       IntakeMessage[]
+  assignedWorkOrders   WorkOrder[]
+  workOrderEvents      WorkOrderEvent[]
+  purchaseRequests     PurchaseRequest[]
+  approvalDecisions    ApprovalDecision[]
+  stockReceipts        StockReceipt[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+
+  @@map("users")
+}
+
+model UserRole {
+  userId     String  @map("user_id")
+  roleId     String  @map("role_id")
+  assignedBy String? @map("assigned_by")
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Building {
+  id        String     @id
+  code      String     @unique
+  name      String
+  floors    Int
+  status    String     @default("ACTIVE")
+  rooms     Room[]
+  incidents Incident[]
+
+  @@map("buildings")
+}
+
+model Room {
+  id           String        @id
+  buildingId   String        @map("building_id")
+  building     Building      @relation(fields: [buildingId], references: [id])
+  code         String        @unique
+  capacity     Int
+  roomType     String        @map("room_type")
+  status       String        @default("ACTIVE")
+  assets       Asset[]
+  roomBookings RoomBooking[]
+  roomOutages  RoomOutage[]
+  incidents    Incident[]
+
+  @@map("rooms")
+}
+
+model Asset {
+  id                 String               @id
+  assetTag           String               @unique @map("asset_tag")
+  roomId             String               @map("room_id")
+  room               Room                 @relation(fields: [roomId], references: [id])
+  type               String
+  status             String               @default("ACTIVE")
+  installedAt        DateTime             @map("installed_at")
+  incidents          Incident[]
+  maintenanceHistory MaintenanceHistory[]
+
+  @@map("assets")
+}
+
+// -------------------------------------------------------------
+// 2. STAFF & SCHEDULING
+// -------------------------------------------------------------
+
+model Skill {
+  id               String            @id
+  name             String
+  technicianSkills TechnicianSkill[]
+  workOrders       WorkOrder[]
+
+  @@map("skills")
+}
+
+model TechnicianSkill {
+  userId  String @map("user_id")
+  skillId String @map("skill_id")
+  level   Int
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@map("technician_skills")
+}
+
+model StaffShift {
+  id       String   @id
+  userId   String   @map("user_id")
+  user     User     @relation(fields: [userId], references: [id])
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+
+  @@index([userId, startsAt, endsAt])
+  @@map("staff_shifts")
+}
+
+model StaffLeave {
+  id       String   @id
+  userId   String   @map("user_id")
+  user     User     @relation(fields: [userId], references: [id])
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+  status   String
+
+  @@index([userId, status, startsAt, endsAt])
+  @@map("staff_leave")
+}
+
+model RoomBooking {
+  id           String            @id
+  roomId       String            @map("room_id")
+  room         Room              @relation(fields: [roomId], references: [id])
+  departmentId String            @map("department_id")
+  department   Department        @relation(fields: [departmentId], references: [id])
+  facultyId    String            @map("faculty_id")
+  faculty      User              @relation(fields: [facultyId], references: [id])
+  startsAt     DateTime          @map("starts_at")
+  endsAt       DateTime          @map("ends_at")
+  status       String
+  purpose      String
+  requirements RoomRequirement[]
+
+  @@index([roomId, startsAt, endsAt])
+  @@map("room_bookings")
+}
+
+model RoomRequirement {
+  bookingId       String      @map("booking_id")
+  requirementType String      @map("requirement_type")
+  value           String
+  booking         RoomBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@id([bookingId, requirementType])
+  @@map("room_requirements")
+}
+
+model RoomOutage {
+  id         String    @id
+  roomId     String    @map("room_id")
+  room       Room      @relation(fields: [roomId], references: [id])
+  incidentId String?   @map("incident_id")
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+  startsAt   DateTime  @map("starts_at")
+  endsAt     DateTime? @map("ends_at")
+  status     String
+
+  @@map("room_outages")
+}
+
+// -------------------------------------------------------------
+// 3. INCIDENT MANAGEMENT
+// -------------------------------------------------------------
+
+model IntakeMessage {
+  id                String           @id
+  channel           String
+  originalText      String           @map("original_text")
+  language          String           @default("en")
+  reporterId        String?          @map("reporter_id")
+  reporter          User?            @relation(fields: [reporterId], references: [id])
+  externalMessageId String?          @map("external_message_id")
+  receivedAt        DateTime         @default(now()) @map("received_at")
+  incidentReports   IncidentReport[]
+
+  @@map("intake_messages")
+}
+
+model Incident {
+  id              String           @id
+  reference       String           @unique
+  title           String
+  category        String
+  priority        String
+  status          String
+  buildingId      String?          @map("building_id")
+  building        Building?        @relation(fields: [buildingId], references: [id])
+  roomId          String?          @map("room_id")
+  room            Room?            @relation(fields: [roomId], references: [id])
+  assetId         String?          @map("asset_id")
+  asset           Asset?           @relation(fields: [assetId], references: [id])
+  createdAt       DateTime         @default(now()) @map("created_at")
+  
+  incidentReports IncidentReport[]
+  sourceLinks     IncidentLink[]   @relation("SourceIncident")
+  targetLinks     IncidentLink[]   @relation("TargetIncident")
+  workOrders      WorkOrder[]
+  roomOutages     RoomOutage[]
+  impacts         IncidentImpact[]
+
+  @@map("incidents")
+}
+
+model IncidentReport {
+  incidentId       String        @map("incident_id")
+  intakeMessageId  String        @map("intake_message_id")
+  relationshipType String        @default("PRIMARY") @map("relationship_type")
+  incident         Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  intakeMessage    IntakeMessage @relation(fields: [intakeMessageId], references: [id], onDelete: Cascade)
+
+  @@id([incidentId, intakeMessageId])
+  @@map("incident_reports")
+}
+
+model IncidentLink {
+  id               String   @id
+  sourceIncidentId String   @map("source_incident_id")
+  targetIncidentId String   @map("target_incident_id")
+  relation         String
+  confidence       Float    @default(1.0)
+  reviewStatus     String   @default("PENDING") @map("review_status")
+  sourceIncident   Incident @relation("SourceIncident", fields: [sourceIncidentId], references: [id], onDelete: Cascade)
+  targetIncident   Incident @relation("TargetIncident", fields: [targetIncidentId], references: [id], onDelete: Cascade)
+
+  @@map("incident_links")
+}
+
+model WorkOrder {
+  id                 String               @id
+  incidentId         String               @map("incident_id")
+  incident           Incident             @relation(fields: [incidentId], references: [id])
+  assignedTo         String?              @map("assigned_to")
+  assignee           User?                @relation(fields: [assignedTo], references: [id])
+  status             String
+  requiredSkillId    String?              @map("required_skill_id")
+  requiredSkill      Skill?               @relation(fields: [requiredSkillId], references: [id])
+  dueAt              DateTime?            @map("due_at")
+  blockedReason      String?              @map("blocked_reason")
+  
+  events             WorkOrderEvent[]
+  maintenanceHistory MaintenanceHistory[]
+  stockReservations  StockReservation[]
+  purchaseRequests   PurchaseRequest[]
+
+  @@map("work_orders")
+}
+
+model WorkOrderEvent {
+  id          String    @id
+  workOrderId String    @map("work_order_id")
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  actorId     String?   @map("actor_id")
+  actor       User?     @relation(fields: [actorId], references: [id])
+  eventType   String    @map("event_type")
+  details     String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("work_order_events")
+}
+
+model MaintenanceHistory {
+  id          String     @id
+  assetId     String     @map("asset_id")
+  asset       Asset      @relation(fields: [assetId], references: [id])
+  workOrderId String?    @map("work_order_id")
+  workOrder   WorkOrder? @relation(fields: [workOrderId], references: [id])
+  faultType   String     @map("fault_type")
+  resolution  String
+  completedAt DateTime   @default(now()) @map("completed_at")
+
+  @@map("maintenance_history")
+}
+
+model IncidentImpact {
+  id         String   @id
+  incidentId String   @map("incident_id")
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  impactType String   @map("impact_type")
+  status     String   @default("ACTIVE")
+
+  @@index([incidentId, targetType, targetId])
+  @@map("incident_impacts")
+}
+
+// -------------------------------------------------------------
+// 4. INVENTORY & PROCUREMENT
+// -------------------------------------------------------------
+
+model InventoryItem {
+  id                   String                @id
+  sku                  String                @unique
+  name                 String
+  unit                 String
+  quantityOnHand       Int                   @default(0) @map("quantity_on_hand")
+  reorderLevel         Int                   @default(0) @map("reorder_level")
+  
+  stockReservations    StockReservation[]
+  stockMovements       StockMovement[]
+  purchaseRequestLines PurchaseRequestLine[]
+  stockReceipts        StockReceipt[]
+
+  @@map("inventory_items")
+}
+
+model StockReservation {
+  id          String        @id
+  itemId      String        @map("item_id")
+  item        InventoryItem @relation(fields: [itemId], references: [id])
+  workOrderId String        @map("work_order_id")
+  workOrder   WorkOrder     @relation(fields: [workOrderId], references: [id])
+  quantity    Int
+  status      String        @default("ACTIVE")
+
+  @@index([itemId, status])
+  @@map("stock_reservations")
+}
+
+model StockMovement {
+  id            String        @id
+  itemId        String        @map("item_id")
+  item          InventoryItem @relation(fields: [itemId], references: [id])
+  quantityDelta Int           @map("quantity_delta")
+  reason        String
+  referenceId   String?       @map("reference_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@index([itemId, createdAt])
+  @@map("stock_movements")
+}
+
+model PurchaseRequest {
+  id                String                @id
+  requesterId       String                @map("requester_id")
+  requester         User                  @relation(fields: [requesterId], references: [id])
+  workOrderId       String?               @map("work_order_id")
+  workOrder         WorkOrder?            @relation(fields: [workOrderId], references: [id])
+  status            String                @default("PENDING_APPROVAL")
+  estimatedTotal    Float?                @map("estimated_total")
+  reason            String
+  lines             PurchaseRequestLine[]
+  approvalDecisions ApprovalDecision[]
+  stockReceipts     StockReceipt[]
+
+  @@map("purchase_requests")
+}
+
+model PurchaseRequestLine {
+  id                String          @id
+  requestId         String          @map("request_id")
+  request           PurchaseRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  itemId            String          @map("item_id")
+  item              InventoryItem   @relation(fields: [itemId], references: [id])
+  quantity          Int
+  estimatedUnitCost Float?          @map("estimated_unit_cost")
+
+  @@map("purchase_request_lines")
+}
+
+model ApprovalDecision {
+  id         String          @id
+  requestId  String          @map("request_id")
+  request    PurchaseRequest @relation(fields: [requestId], references: [id])
+  approverId String          @map("approver_id")
+  approver   User            @relation(fields: [approverId], references: [id])
+  decision   String
+  comment    String?
+  decidedAt  DateTime        @default(now()) @map("decided_at")
+
+  @@map("approval_decisions")
+}
+
+model StockReceipt {
+  id                String          @id
+  purchaseRequestId String          @map("purchase_request_id")
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id])
+  itemId            String          @map("item_id")
+  item              InventoryItem   @relation(fields: [itemId], references: [id])
+  quantityReceived  Int             @map("quantity_received")
+  receivedBy        String          @map("received_by")
+  receiver          User            @relation(fields: [receivedBy], references: [id])
+  receivedAt        DateTime        @default(now()) @map("received_at")
+  condition         String          @default("ACCEPTED")
+
+  @@map("stock_receipts")
+}
+
+// -------------------------------------------------------------
+// 5. OPERATIONS & SECURITY
+// -------------------------------------------------------------
+
+model SlaPolicy {
+  id                String @id
+  priority          String @unique
+  responseMinutes   Int    @map("response_minutes")
+  resolutionMinutes Int    @map("resolution_minutes")
+
+  @@map("sla_policies")
+}
+
+model Notification {
+  id          String    @id
+  recipientId String    @map("recipient_id")
+  recipient   User      @relation(fields: [recipientId], references: [id])
+  eventType   String    @map("event_type")
+  title       String
+  body        String
+  readAt      DateTime? @map("read_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([recipientId, readAt])
+  @@map("notifications")
+}
+
+model OutboxEvent {
+  id        String   @id
+  eventKey  String   @unique @map("event_key")
+  eventType String   @map("event_type")
+  payload   String
+  status    String   @default("PENDING")
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([status, attempts])
+  @@map("outbox_events")
+}
+
+model AuditLog {
+  id         String   @id
+  actorId    String?  @map("actor_id")
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  beforeJson String?  @map("before_json")
+  afterJson  String?  @map("after_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
+
+model IdempotencyKey {
+  key         String   @id
+  operation   String
+  requestHash String   @map("request_hash")
+  resultJson  String   @map("result_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("idempotency_keys")
+}

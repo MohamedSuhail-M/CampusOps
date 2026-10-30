@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusOps — Secure Sign In</title>
+  <!-- Google Fonts: Oswald, Space Grotesk, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=Space+Grotesk:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#0A0A0A',
+            brandCream: '#F2EFE9',
+            brandLime: '#C5F135',
+            brandMuted: '#A3A3A3',
+            brandDarkMuted: '#737373',
+            brandError: '#EF4444'
+          },
+          fontFamily: {
+            display: ['Oswald', 'sans-serif'],
+            body: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          boxShadow: {
+            'brutal': '8px 8px 0px 0px #0A0A0A',
+            'brutal-sm': '4px 4px 0px 0px #0A0A0A',
+            'brutal-pressed': '2px 2px 0px 0px #0A0A0A'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Architectural Hairline Grid for Left Dark Panel */
+    .blueprint-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+    
+    /* Interactive Role Chip & Button States */
+    .role-chip {
+      transition: all 0.1s ease-in-out;
+    }
+    .role-chip.active {
+      background-color: #0A0A0A !important;
+      color: #C5F135 !important;
+      border-color: #0A0A0A !important;
+    }
+    .role-chip:hover:not(.active) {
+      background-color: #E6E2D8;
+    }
+
+    /* Tab switcher for Previewing States */
+    .state-tab.active {
+      background-color: #C5F135;
+      color: #0A0A0A;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-brandDark text-brandCream font-body min-h-screen antialiased selection:bg-brandLime selection:text-brandDark flex flex-col justify-between">
+
+  <!-- TOP UTILITY BAR / STATUS STRIP -->
+  <header class="h-10 border-b border-white/10 px-4 sm:px-6 flex items-center justify-between text-[11px] font-mono tracking-wider text-brandDarkMuted uppercase bg-[#070707] z-20 shrink-0">
+    
+    
+    <!-- State Switcher Bar for Design Review -->
+    <div class="flex items-center gap-1 text-[10px]">
+      
+      
+      
+      
+      
+    </div>
+  </header>
+
+  <!-- MAIN 50/50 SPLIT CONTAINER (1440x900 target layout) -->
+  <main class="flex-1 w-full flex items-center justify-center p-4 sm:p-8 lg:p-12 relative blueprint-grid"><div class="w-full max-w-6xl bg-brandCream border-2 border-brandDark shadow-[8px_8px_0px_0px_#C5F135] grid grid-cols-1 lg:grid-cols-12 overflow-hidden"><div class="lg:col-span-6 bg-[#0E0E0E] text-brandCream p-6 sm:p-10 lg:p-12 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 border-brandDark relative"><div class="absolute inset-0 z-0 overflow-hidden flex items-center justify-center bg-[#0a1612]"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuARI6yVLtenWuJ2tWYjZD2p0NoBQeqP8rTeJNfsGfu-AVFUEbzXmSMNAeO2FE5VjjBQu1JPtMs87XxUihjaOsw1doABk7wfFa06Y13aDjoC4Rliu_h4p4YtUDCptwV4CeNOljvYoC-8qSL6kxouQt6yBz7E4WYwPMcGwTurz7RHc8zPW_JLHIkxSR9C5HiCIIzPrH12vNiCR0cGdSYmivZKZrdMMK_5NRBYKcqiQrzI" alt="CampusOps Centralized Telemetry &amp; Operations Infrastructure" class="w-full h-full object-cover object-center transition-all duration-500"><div class="absolute inset-0 bg-gradient-to-t from-brandDark/95 via-transparent to-brandDark/80 pointer-events-none"></div><div class="absolute inset-0 blueprint-grid opacity-20 pointer-events-none"></div></div><div class="relative z-10 flex items-center justify-between"><div class="flex items-center space-x-3"><div class="w-10 h-10 bg-brandLime border-2 border-brandDark flex items-center justify-center text-brandDark font-display font-bold text-xl tracking-tighter shadow-[2px_2px_0px_0px_#FFFFFF20]">CO</div><div><span class="font-display font-bold text-2xl tracking-wider text-brandCream block leading-none">CAMPUS<span class="text-brandLime">OPS</span></span><div class="font-mono text-[9px] tracking-[0.2em] text-brandCream/70 uppercase pt-1">CAMPUS OPERATIONS PLATFORM</div></div></div></div><div class="relative z-10 my-auto py-8"><div class="max-w-md"><h1 class="font-display font-black text-6xl md:text-7xl lg:text-7xl uppercase tracking-tight text-brandCream leading-none mb-4">DIGITAL CAMPUS<br><span class="text-brandLime">COORDINATION</span></h1><div class="font-body text-brandCream text-base leading-relaxed bg-brandDark/80 p-4 border-l-2 border-brandLime backdrop-blur-xs space-y-3 mb-4"><p class="text-lg font-medium text-brandCream leading-relaxed">Synchronizing facilities, academic venues, and emergency response across the entire collegiate ecosystem.</p><p class="text-brandCream font-mono text-base tracking-wide leading-relaxed">Real-time dispatch engine routing incidents with sub-second verified telemetry.</p></div></div></div></div><div class="lg:col-span-6 bg-brandCream p-6 sm:p-10 lg:p-12 flex flex-col justify-between"><div class="flex items-center justify-between pb-4 border-b border-brandDark/15"><div class="flex items-center gap-1.5 font-mono text-[10px] uppercase font-bold text-brandDark"><span class="w-2 h-2 bg-brandLime border border-brandDark inline-block"></span>GATEWAY ACCESS / 01</div><a href="#" class="font-mono text-xs text-brandDark hover:text-black font-bold tracking-wider uppercase inline-flex items-center gap-1 py-0.5 px-2 border border-brandDark bg-white shadow-[2px_2px_0px_0px_#0A0A0A] hover:bg-brandCream active:translate-x-[1px] active:translate-y-[1px] transition-all">← BACK</a></div><div class="my-auto py-6 max-w-md mx-auto w-full"><div class="mb-6"><h2 class="font-display font-bold text-4xl sm:text-5xl text-brandDark uppercase tracking-tight leading-none mb-1.5">SIGN IN</h2><p class="font-body text-brandDarkMuted text-base">Enter your campus credentials to access the operation portal.</p></div><div class="mb-5"><div class="flex items-center justify-between mb-1.5"><label class="font-mono text-xs font-bold tracking-wider uppercase text-brandDark">SELECT ROLE</label><span id="role-destination" class="font-mono text-[11px] text-brandDarkMuted uppercase">→ STUDENT PORTAL</span></div><div class="grid grid-cols-5 gap-1 font-mono font-bold uppercase tracking-wider text-center text-xs"><button type="button" onclick="selectRole('STUDENT')" id="chip-STUDENT" class="role-chip active py-1.5 px-1 border-2 border-brandDark bg-brandDark text-brandLime">STUDENT</button><button type="button" onclick="selectRole('STAFF')" id="chip-STAFF" class="role-chip py-1.5 px-1 border-2 border-brandDark bg-white text-brandDark">STAFF</button><button type="button" onclick="selectRole('WORKER')" id="chip-WORKER" class="role-chip py-1.5 px-1 border-2 border-brandDark bg-white text-brandDark">WORKER</button><button type="button" onclick="selectRole('ADMIN')" id="chip-ADMIN" class="role-chip py-1.5 px-1 border-2 border-brandDark bg-white text-brandDark">ADMIN</button><button type="button" onclick="selectRole('DIRECTOR')" id="chip-DIRECTOR" class="role-chip py-1.5 px-1 border-2 border-brandDark bg-white text-brandDark">EXEC</button></div></div><form id="login-form" onsubmit="event.preventDefault(); simulateSubmit();" class="space-y-4"><div><div class="flex items-center justify-between mb-1"><label for="campus-id" class="font-mono text-xs font-bold tracking-wider uppercase text-brandDark">CAMPUS EMAIL OR ID</label><span class="font-mono text-[11px] text-brandDarkMuted">e.g. m.ortiz@campusops.edu</span></div><input type="text" id="campus-id" value="m.ortiz@campusops.edu" placeholder="Enter email or university ID" class="w-full h-11 px-3 bg-white border-2 border-brandDark font-body text-brandDark placeholder-brandDarkMuted/60 focus:outline-none focus:ring-2 focus:ring-brandLime focus:border-brandDark transition-all rounded-none text-base" required=""><div id="email-error-msg" class="hidden mt-1 font-mono text-[10px] text-brandError font-bold tracking-tight uppercase flex items-center gap-1"><span class="">⚠</span><span class="">INCORRECT CREDENTIALS. TRY AGAIN.</span></div></div><div><div class="flex items-center justify-between mb-1"><label for="password-input" class="font-mono text-xs font-bold tracking-wider uppercase text-brandDark">PASSWORD</label><button type="button" onclick="togglePasswordVisibility()" id="toggle-pwd-btn" class="font-mono text-xs font-bold tracking-wider uppercase text-brandDark hover:text-black underline underline-offset-2">SHOW</button></div><input type="password" id="password-input" value="••••••••••••" placeholder="••••••••••••" class="w-full h-11 px-3 bg-white border-2 border-brandDark font-body text-brandDark placeholder-brandDarkMuted/60 focus:outline-none focus:ring-2 focus:ring-brandLime focus:border-brandDark transition-all rounded-none text-base" required=""></div><div class="flex items-center justify-between pt-0.5"><label class="flex items-center space-x-2 cursor-pointer select-none"><input type="checkbox" checked="" class="w-3.5 h-3.5 rounded-none border-2 border-brandDark text-brandDark focus:ring-0 focus:ring-offset-0 accent-brandDark cursor-pointer"><span class="font-mono text-xs tracking-wider uppercase text-brandDark font-medium">REMEMBER ME</span></label><a href="#" class="font-mono text-xs tracking-wider uppercase text-brandDark font-bold hover:text-black underline underline-offset-2">FORGOT PASSWORD?</a></div><div class="pt-1"><button type="submit" id="submit-btn" class="w-full h-11 bg-brandLime border-2 border-brandDark text-brandDark font-display font-bold text-base tracking-wider uppercase flex items-center justify-center space-x-2 shadow-brutal-sm hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-brutal-pressed active:translate-x-1 active:translate-y-1 active:shadow-none transition-all rounded-none cursor-pointer"><span id="btn-text" class="">SIGN IN →</span></button></div></form><div class="relative my-5"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-brandDark/20"></div></div><div class="relative flex justify-center text-xs uppercase"><span class="bg-brandCream px-3 font-mono text-[10px] font-bold text-brandDarkMuted tracking-widest border border-brandDark/20">OR</span></div></div><div><a href="#" class="w-full h-11 bg-white border-2 border-brandDark text-brandDark font-mono font-bold tracking-wider uppercase flex items-center justify-center space-x-2 shadow-brutal-sm hover:bg-brandCream hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all rounded-none text-xs"><svg class="w-3.5 h-3.5 text-brandDark" fill="currentColor" viewBox="0 0 24 24"><path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14-2h4v4h-4v-4zm-4 4h4v4h-4v-4zm4 4h4v4h-4v-4zm-8-4h4v4h-4v-4zm0 4h4v4h-4v-4z"></path></svg><span class="">REPORT AN ISSUE WITHOUT LOGIN</span></a></div><div class="mt-5 pt-4 border-t border-brandDark/15 text-center font-mono text-xs"><span class="text-brandDarkMuted">DON'T HAVE AN ACCOUNT? </span><a href="#" class="font-bold text-brandDark hover:text-black underline underline-offset-4 decoration-2 decoration-brandDark">REGISTER NOW</a></div></div><div class="pt-4 border-brandDark/15 flex items-center justify-between font-mono text-brandDarkMuted uppercase tracking-wider text-[10px]"><span class="">SSO &amp; SAML 2.0 ENFORCED</span><span class="">© 2025 CAMPUSOPS INC.</span></div></div></div></main>
+
+  <!-- JAVASCRIPT: INTERACTION LOGIC (Role Switching, State Previews, Show/Hide Password) -->
+  <script>
+    // 1. Role Selection Switching
+    const roles = ['STUDENT', 'STAFF', 'WORKER', 'ADMIN', 'DIRECTOR'];
+    const roleRoutes = {
+      'STUDENT': '→ ROUTES TO: STUDENT PORTAL (QUICK DISPATCH & HOUSING)',
+      'STAFF': '→ ROUTES TO: FACULTY CONTINUITY & CLASSROOM MANAGEMENT',
+      'WORKER': '→ ROUTES TO: TECHNICIAN MOBILE WORK ORDERS & DIAGNOSTICS',
+      'ADMIN': '→ ROUTES TO: FACILITIES OPERATIONS & PROCUREMENT DISPATCH',
+      'DIRECTOR': '→ ROUTES TO: EXECUTIVE MACRO ANALYTICS & CAPITAL PACING'
+    };
+
+    function selectRole(selected) {
+      roles.forEach(role => {
+        const chip = document.getElementById('chip-' + role);
+        if (role === selected) {
+          chip.classList.add('active');
+          chip.classList.remove('bg-white', 'text-brandDark');
+          chip.classList.add('bg-brandDark', 'text-brandLime');
+        } else {
+          chip.classList.remove('active');
+          chip.classList.remove('bg-brandDark', 'text-brandLime');
+          chip.classList.add('bg-white', 'text-brandDark');
+        }
+      });
+      document.getElementById('role-destination').textContent = roleRoutes[selected];
+    }
+
+    // 2. Toggle Password Visibility
+    function togglePasswordVisibility() {
+      const pwdField = document.getElementById('password-input');
+      const toggleBtn = document.getElementById('toggle-pwd-btn');
+      if (pwdField.type === 'password') {
+        pwdField.type = 'text';
+        toggleBtn.textContent = 'HIDE';
+      } else {
+        pwdField.type = 'password';
+        toggleBtn.textContent = 'SHOW';
+      }
+    }
+
+    // 3. Form State Switcher (for QA / Demonstration of Requested Frames)
+    function setFormState(stateName) {
+      // Update top state bar buttons
+      document.querySelectorAll('.state-tab').forEach(el => el.classList.remove('active'));
+      const activeTab = document.getElementById('btn-state-' + stateName);
+      if (activeTab) activeTab.classList.add('active');
+
+      const emailInput = document.getElementById('campus-id');
+      const errorMsg = document.getElementById('email-error-msg');
+      const submitBtn = document.getElementById('submit-btn');
+      const btnText = document.getElementById('btn-text');
+
+      // Reset base input styles
+      emailInput.classList.remove('border-brandError', 'ring-2', 'ring-brandError', 'ring-brandLime');
+      emailInput.classList.add('border-brandDark');
+      errorMsg.classList.add('hidden');
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+      btnText.textContent = 'SIGN IN →';
+
+      if (stateName === 'focused') {
+        emailInput.focus();
+        emailInput.classList.add('ring-2', 'ring-brandLime');
+      } else if (stateName === 'error') {
+        emailInput.classList.remove('border-brandDark');
+        emailInput.classList.add('border-brandError', 'ring-2', 'ring-brandError');
+        errorMsg.classList.remove('hidden');
+        emailInput.focus();
+      } else if (stateName === 'loading') {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        btnText.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-brandDark inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          SIGNING IN...
+        `;
+      }
+    }
+
+    // 4. Form Submit Simulation
+    function simulateSubmit() {
+      setFormState('loading');
+      setTimeout(() => {
+        setFormState('default');
+      }, 1800);
+    }
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="mouse-effects-overlay" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden" aria-hidden="true"><style>@keyframes ok-ring-expand{0%{width:0;height:0;opacity:1;border-width:2px}100%{width:70px;height:70px;opacity:0;border-width:2px}}@media(prefers-reduced-motion:reduce){.ok-ring-effect{display:none!important}}</style><script>(function(){const c=document.getElementById('mouse-effects-overlay');if(!c)return;const rm=window.matchMedia('(prefers-reduced-motion: reduce)');window.addEventListener('pointerdown',function(e){if(rm.matches)return;const r=document.createElement('div');r.className='ok-ring-effect';r.style.cssText='position:absolute;box-sizing:border-box;border-radius:9999px;border:2px solid #C5F135;pointer-events:none;transform:translate(-50%,-50%);width:0;height:0;left:'+e.clientX+'px;top:'+e.clientY+'px;animation:ok-ring-expand 0.4s cubic-bezier(0,0,0.2,1) forwards;';c.appendChild(r);setTimeout(function(){r.remove();},450);},{passive:true});})();</script></div></body></html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html><html class="dark scroll-smooth overflow-x-hidden stitch-anim-fade-in" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Oswald:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>
+  @layer base {
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #0A0A0A;
+      color: #F2EFE9;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #C5F135; }
+  
+  .font-monumental {
+    font-family: 'Oswald', sans-serif;
+  }
+  .font-grotesk {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .font-mono-code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .writing-vertical {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .clip-diagonal-top {
+    clip-path: polygon(0 0, 100% 4vw, 100% 100%, 0 100%);
+  }
+  .clip-diagonal-bottom {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4vw), 0 100%);
+  }
+  .crosshair-grid {
+    background-image: 
+      radial-gradient(#2A2A2A 1px, transparent 1px),
+      linear-gradient(to right, #1C1C1C 1px, transparent 1px),
+      linear-gradient(to bottom, #1C1C1C 1px, transparent 1px);
+    background-size: 40px 40px, 120px 120px, 120px 120px;
+  }
+  .crosshair-grid-light {
+    background-image: 
+      radial-gradient(#C4C9AE 1px, transparent 1px),
+      linear-gradient(to right, #E2DDD5 1px, transparent 1px),
+      linear-gradient(to bottom, #E2DDD5 1px, transparent 1px);
+    background-size: 40px 40px, 120px 120px, 120px 120px;
+  }
+
+  /* Magnetic CTA styling */
+  .magnetic-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #C5F135;
+    border: 1px solid #C5F135;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    will-change: transform;
+    outline: none;
+    text-decoration: none;
+  }
+  .magnetic-cta:focus-visible {
+    outline: 2px solid #C5F135;
+    outline-offset: 4px;
+  }
+  .magnetic-cta-sweep {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #0A0A0A;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    opacity: 0;
+    z-index: 1;
+  }
+  .magnetic-cta.hovered .magnetic-cta-sweep {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  .magnetic-cta-text {
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .magnetic-cta.hovered .magnetic-cta-text {
+    color: #C5F135 !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .magnetic-cta {
+      transform: none !important;
+    }
+    .magnetic-cta-sweep {
+      display: none !important;
+    }
+    .magnetic-cta:hover {
+      background-color: #0A0A0A;
+    }
+    .magnetic-cta:hover .magnetic-cta-text {
+      color: #C5F135 !important;
+    }
+  }
+</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"surface-container-low":"#131313","surface-variant":"#1C1C1C","surface-bright":"#2A2A2A","outline":"#2A2A2A","outline-variant":"#2A2A2A","primary":"#F2EFE9","primary-container":"#C5F135","surface-container":"#131313","primary-fixed":"#C5F135","surface-container-highest":"#1C1C1C","on-surface-variant":"#C4C9AE","on-background":"#F2EFE9","background":"#0A0A0A","surface-container-high":"#1C1C1C","surface-dim":"#0A0A0A","surface-tint":"#C5F135","surface-container-lowest":"#0A0A0A","surface":"#0A0A0A","on-surface":"#F2EFE9"},"spacing":{"gutter":"2rem","margin":"3rem"},"fontFamily":{"headline-xl":["Oswald","sans-serif"],"display-hero":["Oswald","sans-serif"],"body-md":["Inter","sans-serif"],"mono":["JetBrains Mono","monospace"],"grotesk":["Space Grotesk","sans-serif"]}}}};</script></head><body class="bg-[#0A0A0A] text-[#F2EFE9] antialiased selection:bg-[#C5F135] selection:text-[#0A0A0A] relative overflow-x-hidden w-full max-w-full"><div class="fixed top-20 left-0 bottom-0 w-8 z-40 pointer-events-none hidden 2xl:flex flex-col justify-between items-center py-8 border-r border-[#2A2A2A] bg-[#131313]"><span class="font-mono-code text-[10px] text-[#C5F135] tracking-widest writing-vertical uppercase">CAMPUSOPS // ARCHITECTURAL DOSSIER</span><div class="h-24 w-[1px] bg-[#C5F135]"></div><span class="font-mono-code text-[10px] text-[#C4C9AE] tracking-widest writing-vertical">EDITION 2025.04</span></div><div class="fixed top-20 right-0 bottom-0 w-8 z-40 pointer-events-none hidden 2xl:flex flex-col justify-between items-center py-8 border-l border-[#2A2A2A] bg-[#131313]"><span class="font-mono-code text-[10px] text-[#C4C9AE] tracking-widest writing-vertical uppercase">INDEX NO. LAT: 42° 21' N / LON: 71° 03' W</span><div class="h-24 w-[1px] bg-[#2A2A2A]"></div><span class="font-mono-code text-[10px] text-[#C5F135] tracking-widest writing-vertical uppercase">RIGOROUS GOVERNANCE</span></div><header class="fixed top-0 left-0 right-0 z-50 bg-[#131313] border-b border-[#2A2A2A]"><div class="max-w-[1720px] mx-auto px-4 md:px-6 lg:px-16 h-16 md:h-20 flex items-center justify-between gap-2 sm:gap-4"><div class="flex items-center gap-3 lg:gap-6"><a class="flex items-center gap-2.5 sm:gap-3.5 group select-none shrink-0" href="#overview"><div class="w-7 h-7 sm:w-8 sm:h-8 bg-[#C5F135] flex items-center justify-center font-monumental font-bold text-[#0A0A0A] text-base sm:text-lg tracking-tighter">CO</div><div class="flex flex-col leading-none"><span class="font-monumental text-lg sm:text-xl tracking-wider text-white uppercase group-hover:text-[#C5F135] transition-colors">CAMPUSOPS</span><span class="font-mono-code text-[8px] sm:text-[9px] text-[#C5F135] tracking-widest uppercase mt-0.5">DISPATCH ENGINE</span></div></a><div class="hidden xl:flex items-center pl-6 border-l border-[#2A2A2A] gap-2"><span class="inline-block w-1.5 h-1.5 bg-[#C5F135]"></span></div></div><nav class="hidden lg:flex items-center gap-1.5 xl:gap-3"><a class="group font-grotesk text-xs tracking-wider uppercase text-white hover:text-[#C5F135] transition-colors px-2.5 py-1.5 flex items-center gap-1.5 border border-[#C5F135] bg-[#1C1C1C]" href="#overview"><span class="text-[#C5F135] font-mono-code text-[10px] px-1 py-0.5 bg-[#0A0A0A] border border-[#C5F135] font-bold">01</span><span class="tracking-wider">OVERVIEW</span></a><a class="group font-grotesk text-xs tracking-wider uppercase text-[#C4C9AE] hover:text-white transition-colors px-2.5 py-1.5 flex items-center gap-1.5 border border-[#2A2A2A] hover:border-white bg-[#131313]" href="#who-it-helps"><span class="text-[#C4C9AE] font-mono-code text-[10px] px-1 py-0.5 bg-[#1C1C1C] border border-[#2A2A2A] group-hover:text-[#C5F135] group-hover:border-[#C5F135] transition-colors font-bold">02</span><span class="tracking-wider">WHO IT HELPS</span></a><a class="group font-grotesk text-xs tracking-wider uppercase text-[#C4C9AE] hover:text-white transition-colors px-2.5 py-1.5 flex items-center gap-1.5 border border-[#2A2A2A] hover:border-white bg-[#131313]" href="#how-it-works"><span class="text-[#C4C9AE] font-mono-code text-[10px] px-1 py-0.5 bg-[#1C1C1C] border border-[#2A2A2A] group-hover:text-[#C5F135] group-hover:border-[#C5F135] transition-colors font-bold">03</span><span class="tracking-wider">HOW IT WORKS</span></a><a class="group font-grotesk text-xs tracking-wider uppercase text-[#C4C9AE] hover:text-white transition-colors px-2.5 py-1.5 flex items-center gap-1.5 border border-[#2A2A2A] hover:border-white bg-[#131313]" href="#capabilities"><span class="text-[#C4C9AE] font-mono-code text-[10px] px-1 py-0.5 bg-[#1C1C1C] border border-[#2A2A2A] group-hover:text-[#C5F135] group-hover:border-[#C5F135] transition-colors font-bold">04</span><span class="tracking-wider">CAPABILITIES</span></a><a class="group font-grotesk text-xs tracking-wider uppercase text-[#C4C9AE] hover:text-white transition-colors px-2.5 py-1.5 flex items-center gap-1.5 border border-[#2A2A2A] hover:border-white bg-[#131313]" href="#simulation"><span class="text-[#C4C9AE] font-mono-code text-[10px] px-1 py-0.5 bg-[#1C1C1C] border border-[#2A2A2A] group-hover:text-[#C5F135] group-hover:border-[#C5F135] transition-colors font-bold">05</span><span class="tracking-wider">SIMULATION</span></a></nav><div class="flex items-center gap-2 sm:gap-3 shrink-0"><a class="relative inline-flex items-center justify-center px-3 py-2 sm:px-5 sm:py-2.5 font-grotesk font-bold text-[11px] sm:text-xs uppercase tracking-wider text-[#0A0A0A] bg-[#C5F135] hover:bg-[#F2EFE9] transition-colors border border-[#C5F135] shadow-[2px_2px_0px_#2A2A2A] whitespace-nowrap min-h-[40px]" href="#simulation"><span class="relative z-10 flex items-center gap-1 sm:gap-2"><span class="hidden sm:inline">DEPLOY CAMPUSOPS</span><span class="sm:hidden">DEPLOY</span><span class="material-symbols-outlined text-sm sm:text-[16px]">arrow_outward</span></span></a><button aria-label="Open Mobile Menu" class="lg:hidden text-white hover:text-[#C5F135] p-2 border border-[#2A2A2A] bg-[#1C1C1C] hover:border-[#C5F135] transition-colors shrink-0 w-10 h-10 flex items-center justify-center" id="mobile-nav-toggle" type="button"><span class="material-symbols-outlined text-2xl">drag_handle</span></button></div></div><div class="hidden lg:hidden border-t border-[#2A2A2A] bg-[#131313] px-4 py-4" id="mobile-nav-menu"><nav class="flex flex-col gap-2 font-grotesk text-xs uppercase tracking-wider"><a class="text-white p-2.5 border border-[#C5F135] bg-[#1C1C1C] flex items-center justify-between" href="#overview"><span class="flex items-center gap-2"><span class="text-[#C5F135] font-mono-code">01</span> OVERVIEW</span><span class="material-symbols-outlined text-sm">east</span></a><a class="text-[#F2EFE9] p-2.5 border border-[#2A2A2A] hover:border-white bg-[#131313] flex items-center justify-between" href="#who-it-helps"><span class="flex items-center gap-2"><span class="text-[#C4C9AE] font-mono-code">02</span> WHO IT HELPS</span><span class="material-symbols-outlined text-sm">east</span></a><a class="text-[#F2EFE9] p-2.5 border border-[#2A2A2A] hover:border-white bg-[#131313] flex items-center justify-between" href="#how-it-works"><span class="flex items-center gap-2"><span class="text-[#C4C9AE] font-mono-code">03</span> HOW IT WORKS</span><span class="material-symbols-outlined text-sm">east</span></a><a class="text-[#F2EFE9] p-2.5 border border-[#2A2A2A] hover:border-white bg-[#131313] flex items-center justify-between" href="#capabilities"><span class="flex items-center gap-2"><span class="text-[#C4C9AE] font-mono-code">04</span> CAPABILITIES</span><span class="material-symbols-outlined text-sm">east</span></a><a class="text-[#F2EFE9] p-2.5 border border-[#2A2A2A] hover:border-white bg-[#131313] flex items-center justify-between" href="#simulation"><span class="flex items-center gap-2"><span class="text-[#C4C9AE] font-mono-code">05</span> SIMULATION</span><span class="material-symbols-outlined text-sm">east</span></a></nav></div></header><main class="pt-16 md:pt-20 w-full max-w-full overflow-x-hidden"><section class="relative min-h-[92vh] flex flex-col border-b border-[#2A2A2A] px-4 sm:px-6 lg:px-16 py-8 sm:py-12 lg:py-20 overflow-hidden bg-[#0A0A0A] justify-center" id="overview"><div class="absolute inset-0 pointer-events-none opacity-30 crosshair-grid"></div><div class="max-w-[1720px] w-full mx-auto my-auto py-12 sm:py-16 lg:py-20 relative z-10"><div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center"><div class="lg:col-span-5 flex flex-col items-start gap-6 sm:gap-8 relative"><h1 class="font-monumental text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl uppercase tracking-tight leading-[0.95] text-[#F2EFE9]" style="font-family: Oswald, sans-serif; font-weight: 700; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; filter: none; text-shadow: none; opacity: 1;">ONE<br>PLATFORM<br>TO<br><span class="text-[#C5F135]">RUN YOUR</span><br><span class="text-[#C5F135]">CAMPUS.</span></h1><p class="font-body-md text-lg sm:text-xl md:text-2xl text-[#F2EFE9] max-w-xl font-normal leading-relaxed" style="font-family: Inter, sans-serif; font-weight: 400; text-rendering: optimizelegibility; -webkit-font-smoothing: antialiased; filter: none; text-shadow: none; opacity: 1; color: rgb(242, 239, 233);">Manage campus operations, coordinate staff,<br class="hidden sm:inline"> assign tasks, and track daily activities —<br class="hidden sm:inline"> all from one centralized platform.</p><div class="pt-2 sm:pt-4"><a class="magnetic-cta px-6 py-4 md:px-[38px] md:py-[22px] rounded-[6px]" href="#simulation" id="hero-magnetic-cta"><div class="magnetic-cta-sweep" id="magnetic-sweep"></div><span class="magnetic-cta-text font-bold uppercase tracking-wider text-xs sm:text-sm text-[#0A0A0A]" style="font-family: Inter, sans-serif;">DEPLOY CAMPUS OPS.</span></a></div></div><div class="lg:col-span-7 w-full flex justify-center lg:justify-end items-center"><div class="w-full max-w-2xl flex justify-center lg:justify-end items-center"><img alt="CampusOps 3D Architectural Telemetry Platform" class="w-full max-w-[580px] h-auto max-h-[700px] object-contain block drop-shadow-2xl" src="https://lh3.googleusercontent.com/aida/AEtjO1WzoXWmAuS4j4SIVjF0i7-eF5CSeFbc_FxEMFnt8EDqvKfp_2F0QpHG3BSXnm4UXYyr129j_XycrzS5aEcJ7xG9vpcSmZlV5pCDK6koHZHRcqVYAFl6pDOYni3zHDY0RH7YqrjsC3-aIFqNZqvXZAa2Sy-I7mxzGxIljMiRfqefECwohLkDU7o3Fuvhiq2xeQ6473pdZDinj1W6fEzTkYeFT_jUMIhXMqLk8yRigSbbXA"></div></div></div></div></section><section class="relative w-full bg-[#F2EFE9] text-[#0A0A0A] crosshair-grid-light py-12 sm:py-20 lg:py-32 px-4 sm:px-6 lg:px-16" id="who-it-helps"><div class="max-w-[1720px] mx-auto flex flex-col gap-10 sm:gap-16"><div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 border-b border-[#2A2A2A] pb-6 sm:pb-8"><div class="max-w-3xl"><div class="inline-flex items-center gap-2 bg-[#0A0A0A] text-[#F2EFE9] px-2.5 sm:px-3 py-1 mb-3 sm:mb-4"><span class="w-1.5 h-1.5 bg-[#C5F135]"></span><span class="font-mono-code text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em]">BROADSHEET STAKEHOLDER INDEX</span></div><h2 class="font-monumental text-4xl sm:text-6xl lg:text-7xl uppercase tracking-tight leading-[0.95] text-[#0A0A0A] mt-2">WHO IT HELPS</h2><p class="font-grotesk text-base sm:text-xl text-[#1C1C1C] mt-3 sm:mt-4 font-light max-w-2xl leading-relaxed">Tailored visibility and immediate context for every campus role, from dorm rooms to the chancellor's boardroom.</p></div><div class="flex flex-col items-start lg:items-end gap-2 border-l lg:border-l-0 lg:border-r border-[#2A2A2A] pl-4 lg:pl-0 lg:pr-4"><span class="font-mono-code text-xs text-[#0A0A0A] font-bold tracking-widest uppercase">08 STAKEHOLDER PROFILES</span><span class="font-mono-code text-[11px] sm:text-xs text-[#1C1C1C] uppercase">ZERO REDUNDANCY • ZERO FRICTION</span><div class="h-6 w-24 bg-[#0A0A0A] text-[#C5F135] font-mono-code text-[10px] flex items-center justify-center font-bold">STAMP: VERIFIED</div></div></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">01</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">school</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">INTAKE NODE</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Students</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Report campus issues in seconds via QR scan without logging into complex legacy portals.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">SUB-SECOND QR CAPTURE</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">02</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">co_present</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">CONTINUITY GUARANTEE</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Faculty</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Stay informed on room readiness and get fast relocations when teaching spaces are compromised.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">REGISTRAR SYNC</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">03</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">build</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">DIRECT DISPATCH</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Technicians</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Receive direct, context-rich task assignments with diagnostic history and approved parts in hand.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">MOBILE WORK ORDERS</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">04</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">meeting_room</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">ASSET VISIBILITY</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Department Managers</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Track room availability and departmental equipment requests with complete visibility.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">RESOURCE ALLOCATION</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">05</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">domain</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">PLANT INFRASTRUCTURE</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Facilities Admin</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Coordinate campus-wide work orders, vendor dispatches, and emergency maintenance queues.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">PLANT OPERATIONS</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">06</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">shopping_cart_checkout</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">FISCAL GOVERNANCE</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Procurement</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Review purchase requests against operational budgets with enforced separation of duties.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">SEPARATION OF DUTIES</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">07</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">shield</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">SECURITY &amp; ACCESS</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">System Admin</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">Maintain role-based access control, directory sync, and automated rule compliance logs.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">RBAC &amp; SAML SYNC</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div><div class="relative bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="flex items-start justify-between mb-4 sm:mb-6"><span class="font-monumental text-3xl sm:text-4xl text-[#2A2A2A]">08</span><div class="w-9 h-9 sm:w-10 sm:h-10 bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center"><span class="material-symbols-outlined text-xl sm:text-2xl">insights</span></div></div><div><div class="font-mono-code text-[10px] uppercase text-[#1C1C1C] tracking-widest mb-1">EXECUTIVE OVERSIGHT</div><h3 class="font-monumental text-xl sm:text-2xl uppercase tracking-tight text-[#0A0A0A] mb-2 sm:mb-3">Executive Directors</h3><p class="font-body-md text-xs sm:text-sm text-[#1C1C1C] leading-relaxed">View operational throughput, infrastructure bottlenecks, and capital budget pacing.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between"><span class="font-mono-code text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#0A0A0A]">MACRO ANALYTICS</span><span class="material-symbols-outlined text-sm">arrow_forward</span></div></div></div></div></section><section class="relative w-full bg-[#0A0A0A] text-[#F2EFE9] crosshair-grid py-12 sm:py-20 lg:py-32 px-4 sm:px-6 lg:px-16 border-t border-b border-[#2A2A2A]" id="how-it-works"><div class="max-w-[1720px] mx-auto flex flex-col gap-10 sm:gap-16"><div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 border-b border-[#2A2A2A] pb-6 sm:pb-8"><div class="max-w-3xl"><div class="inline-flex items-center gap-2 sm:gap-3"><span class="w-2.5 h-2.5 bg-[#C5F135]"></span><span class="font-mono-code text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#C5F135]">OPERATIONAL TIMELINE SPECIFICATION</span></div><h2 class="font-monumental text-4xl sm:text-6xl lg:text-7xl uppercase tracking-tight leading-[0.95] text-white mt-3 sm:mt-4 mb-2">HOW IT WORKS</h2><p class="font-grotesk text-base sm:text-xl text-[#F2EFE9] font-light mt-3 sm:mt-4 max-w-2xl">Coordinate complex logistics across four clear, milestone-driven phases.</p></div><div class="font-mono-code text-[11px] sm:text-xs text-[#C4C9AE] uppercase tracking-widest">CADENCE: DETERMINISTIC / NO SILOS</div></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"><div class="relative bg-[#131313] border-t-4 border-t-[#C5F135] border border-[#2A2A2A] p-5 sm:p-8 flex flex-col justify-between min-h-[320px] sm:min-h-[420px] shadow-[2px_2px_0px_#2A2A2A]"><div class="flex flex-col"><div class="flex justify-between items-start"><span class="font-monumental text-6xl sm:text-8xl lg:text-9xl text-[#C5F135] leading-none select-none tracking-tighter">01</span><span class="font-mono-code text-[10px] sm:text-xs text-[#C4C9AE] uppercase">PHASE I</span></div><h3 class="font-monumental text-2xl sm:text-3xl uppercase tracking-tight text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Report</h3><p class="font-grotesk text-[#F2EFE9] text-xs sm:text-sm leading-relaxed">Anyone on campus submits an issue in seconds with exact room tagging, equipment codes, and photos.</p></div><div class="pt-4 sm:pt-6 border-t border-[#2A2A2A] flex items-center gap-2 text-[#C5F135] font-mono-code text-xs"><span class="material-symbols-outlined text-base">qr_code_scanner</span><span class="uppercase tracking-widest font-bold text-[10px] sm:text-xs">FAST-PATH INTAKE</span></div></div><div class="relative bg-[#131313] border-t-4 border-t-white border border-[#2A2A2A] p-5 sm:p-8 flex flex-col justify-between min-h-[320px] sm:min-h-[420px] shadow-[2px_2px_0px_#2A2A2A]"><div class="flex flex-col"><div class="flex justify-between items-start"><span class="font-monumental text-6xl sm:text-8xl lg:text-9xl text-white leading-none select-none tracking-tighter">02</span><span class="font-mono-code text-[10px] sm:text-xs text-[#C4C9AE] uppercase">PHASE II</span></div><h3 class="font-monumental text-2xl sm:text-3xl uppercase tracking-tight text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Understand</h3><p class="font-grotesk text-[#F2EFE9] text-xs sm:text-sm leading-relaxed">The system analyzes urgency, safety impacts, and academic schedules to categorize and prioritize the event.</p></div><div class="pt-4 sm:pt-6 border-t border-[#2A2A2A] flex items-center gap-2 text-white font-mono-code text-xs"><span class="material-symbols-outlined text-base">psychology</span><span class="uppercase tracking-widest font-bold text-[10px] sm:text-xs">RULE-BASED TRIAGE</span></div></div><div class="relative bg-[#131313] border-t-4 border-t-[#C5F135] border border-[#2A2A2A] p-5 sm:p-8 flex flex-col justify-between min-h-[320px] sm:min-h-[420px] shadow-[2px_2px_0px_#2A2A2A]"><div class="flex flex-col"><div class="flex justify-between items-start"><span class="font-monumental text-6xl sm:text-8xl lg:text-9xl text-[#C5F135] leading-none select-none tracking-tighter">03</span><span class="font-mono-code text-[10px] sm:text-xs text-[#C4C9AE] uppercase">PHASE III</span></div><h3 class="font-monumental text-2xl sm:text-3xl uppercase tracking-tight text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Coordinate</h3><p class="font-grotesk text-[#F2EFE9] text-xs sm:text-sm leading-relaxed">Rule logic validates technician availability, union rules, and inventory stocks in parallel.</p></div><div class="pt-4 sm:pt-6 border-t border-[#2A2A2A] flex items-center gap-2 text-[#C5F135] font-mono-code text-xs"><span class="material-symbols-outlined text-base">hub</span><span class="uppercase tracking-widest font-bold text-[10px] sm:text-xs">ROSTER &amp; PARTS SYNC</span></div></div><div class="relative bg-[#131313] border-t-4 border-t-white border border-[#2A2A2A] p-5 sm:p-8 flex flex-col justify-between min-h-[320px] sm:min-h-[420px] shadow-[2px_2px_0px_#2A2A2A]"><div class="flex flex-col"><div class="flex justify-between items-start"><span class="font-monumental text-6xl sm:text-8xl lg:text-9xl text-white leading-none select-none tracking-tighter">04</span><span class="font-mono-code text-[10px] sm:text-xs text-[#C4C9AE] uppercase">PHASE IV</span></div><h3 class="font-monumental text-2xl sm:text-3xl uppercase tracking-tight text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Resolve</h3><p class="font-grotesk text-[#F2EFE9] text-xs sm:text-sm leading-relaxed">Work is verified on site, closing the loop with automated alerts to affected faculty and room schedulers.</p></div><div class="pt-4 sm:pt-6 border-t border-[#2A2A2A] flex items-center gap-2 text-white font-mono-code text-xs"><span class="material-symbols-outlined text-base">verified</span><span class="uppercase tracking-widest font-bold text-[10px] sm:text-xs">VERIFIED CLOSURE</span></div></div></div></div></section><section class="relative w-full bg-[#F2EFE9] text-[#0A0A0A] crosshair-grid-light py-12 sm:py-20 lg:py-32 px-4 sm:px-6 lg:px-16" id="capabilities"><div class="max-w-[1720px] mx-auto flex flex-col gap-10 sm:gap-16"><div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 border-b border-[#2A2A2A] pb-6 sm:pb-8"><div class="max-w-3xl"><div class="inline-flex items-center gap-2 bg-[#0A0A0A] text-[#F2EFE9] px-2.5 sm:px-3 py-1 mb-3 sm:mb-4"><span class="w-1.5 h-1.5 bg-[#C5F135]"></span><span class="font-mono-code text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em]">ENGINEERED GOVERNANCE ARCHITECTURE</span></div><h2 class="font-monumental text-4xl sm:text-6xl lg:text-7xl uppercase tracking-tight leading-[0.95] text-[#0A0A0A] mt-2">CAPABILITIES</h2><p class="font-grotesk text-base sm:text-xl text-[#1C1C1C] mt-3 sm:mt-4 font-light max-w-2xl leading-relaxed">Architected for institutional rigor and unbroken accountability.</p></div><div class="font-mono-code text-xs text-[#0A0A0A] font-bold uppercase tracking-widest border border-[#2A2A2A] px-3 sm:px-4 py-1.5 sm:py-2 bg-[#F2EFE9] self-start lg:self-auto">SPEC: AUDIT-SEC-770-COMPLIANT</div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"><div class="bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="space-y-3 sm:space-y-4"><div class="inline-block bg-[#C5F135] border border-[#2A2A2A] px-2.5 sm:px-3 py-1 font-monumental text-base sm:text-lg uppercase tracking-wider text-[#0A0A0A]">Incident coordination</div><p class="font-body-md text-sm sm:text-base text-[#1C1C1C] leading-relaxed">Review and prioritize incoming issues across student housing, academic IT, and central facilities with automated deduplication.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex flex-wrap items-center justify-between gap-2 font-mono-code text-xs text-[#0A0A0A]"><span class="font-bold uppercase text-[11px] sm:text-xs">Deduplication Engine</span><span class="bg-[#0A0A0A] text-[#C5F135] px-2 py-0.5 font-bold text-[10px] sm:text-xs">+ 99.4% precision</span></div></div><div class="bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="space-y-3 sm:space-y-4"><div class="inline-block bg-[#C5F135] border border-[#2A2A2A] px-2.5 sm:px-3 py-1 font-monumental text-base sm:text-lg uppercase tracking-wider text-[#0A0A0A]">Staff assignment</div><p class="font-body-md text-sm sm:text-base text-[#1C1C1C] leading-relaxed">Assign each issue to the right technician based on certifications, shift availability, and union safety rules without manual delay.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex flex-wrap items-center justify-between gap-2 font-mono-code text-xs text-[#0A0A0A]"><span class="font-bold uppercase text-[11px] sm:text-xs">Union SLA Check</span><span class="bg-[#0A0A0A] text-[#F2EFE9] px-2 py-0.5 font-bold text-[10px] sm:text-xs">Zero Overrides</span></div></div><div class="bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A]"><div class="space-y-3 sm:space-y-4"><div class="inline-block bg-[#C5F135] border border-[#2A2A2A] px-2.5 sm:px-3 py-1 font-monumental text-base sm:text-lg uppercase tracking-wider text-[#0A0A0A]">Room continuity</div><p class="font-body-md text-sm sm:text-base text-[#1C1C1C] leading-relaxed">Proactively relocate scheduled classes and alert faculty before students arrive when lecture halls require urgent maintenance.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex flex-wrap items-center justify-between gap-2 font-mono-code text-xs text-[#0A0A0A]"><span class="font-bold uppercase text-[11px] sm:text-xs">Class Relocation</span><span class="bg-[#0A0A0A] text-[#C5F135] px-2 py-0.5 font-bold text-[10px] sm:text-xs">Auto SMS / Banner</span></div></div><div class="bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A] md:col-span-2 lg:col-span-2"><div class="space-y-3 sm:space-y-4"><div class="inline-block bg-[#C5F135] border border-[#2A2A2A] px-2.5 sm:px-3 py-1 font-monumental text-base sm:text-lg uppercase tracking-wider text-[#0A0A0A]">Inventory and approvals</div><p class="font-body-md text-sm sm:text-base text-[#1C1C1C] max-w-2xl leading-relaxed">Prevent self-approval on purchase orders and verify physical delivery before updating stock, safeguarding institutional procurement funds.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex flex-wrap items-center justify-between gap-2 font-mono-code text-xs text-[#0A0A0A]"><span class="font-bold uppercase text-[11px] sm:text-xs">Dual-Sign Separation</span><span class="bg-[#0A0A0A] text-[#F2EFE9] px-2 py-0.5 font-bold text-[10px] sm:text-xs">Scan Verification Only</span></div></div><div class="bg-[#F2EFE9] border border-[#2A2A2A] p-5 sm:p-6 lg:p-8 flex flex-col justify-between shadow-[2px_2px_0px_#2A2A2A] md:col-span-2 lg:col-span-1"><div class="space-y-3 sm:space-y-4"><div class="inline-block bg-[#C5F135] border border-[#2A2A2A] px-2.5 sm:px-3 py-1 font-monumental text-base sm:text-lg uppercase tracking-wider text-[#0A0A0A]">Accountability</div><p class="font-body-md text-sm sm:text-base text-[#1C1C1C] leading-relaxed">Tamper-evident operational audit logs recording who authorized every action and part release, ensuring clean post-incident reviews.</p></div><div class="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-[#2A2A2A] flex flex-wrap items-center justify-between gap-2 font-mono-code text-xs text-[#0A0A0A]"><span class="font-bold uppercase text-[11px] sm:text-xs">Cryptographic Trail</span><span class="bg-[#0A0A0A] text-[#C5F135] px-2 py-0.5 font-bold text-[10px] sm:text-xs">Immutable History</span></div></div></div></div></section><section class="relative w-full bg-[#0A0A0A] text-[#F2EFE9] crosshair-grid py-12 sm:py-20 lg:py-32 px-4 sm:px-6 lg:px-16" id="simulation"><div class="max-w-[1720px] mx-auto flex flex-col gap-10 sm:gap-16"><div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-8 border-b border-[#2A2A2A] pb-6 sm:pb-8"><div><div class="inline-flex items-center gap-2 border border-[#C5F135] bg-[#1C1C1C] px-2.5 sm:px-3 py-1"><span class="w-2 h-2 bg-[#C5F135]"></span><span class="font-mono-code text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#C5F135]">INTERACTIVE REASONING TESTBENCH</span></div><h2 class="font-monumental text-4xl sm:text-6xl lg:text-7xl uppercase tracking-tight leading-[0.95] text-white mt-3 sm:mt-4 mb-2">OPERATIONS IN ACTION</h2><p class="font-grotesk text-base sm:text-xl text-[#F2EFE9] font-light mt-3 sm:mt-4">Interactive Rule Enforcement Engine: See how CampusOps validates policies and prevents costly operational mistakes in real time.</p></div><div class="flex flex-col sm:flex-row items-stretch sm:items-center p-1 bg-[#131313] border border-[#2A2A2A] gap-1"><button class="scenario-tab px-4 sm:px-6 py-2.5 sm:py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors bg-[#C5F135] text-[#0A0A0A] border border-[#C5F135] min-h-[44px] flex items-center justify-center" id="tab-btn-1" type="button">B-204 Electrical Failure</button><button class="scenario-tab px-4 sm:px-6 py-2.5 sm:py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors text-[#C4C9AE] hover:text-white bg-[#131313] border border-[#2A2A2A] min-h-[44px] flex items-center justify-center" id="tab-btn-2" type="button">C-Wing Wi-Fi Outage</button></div></div><div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start"><div class="lg:col-span-7 flex flex-col gap-4 min-w-0 w-full max-w-full overflow-hidden" id="rules-container"><div data-step="1" class="rule-card cursor-pointer p-6 bg-[#131313] transition-colors border border-[#C5F135] shadow-[2px_2px_0px_#C5F135]">
+<div class="flex items-center justify-between mb-2">
+<span class="font-mono-code text-[11px] text-[#C5F135] font-bold tracking-wider uppercase">RULE ENFORCEMENT • MOMENT 01</span>
+<span class="px-2 py-0.5 border border-[#2A2A2A] bg-[#1C1C1C] text-white font-mono-code text-[10px] uppercase">System Policy 4.2</span>
+</div>
+<h3 class="font-monumental text-2xl uppercase text-white tracking-wide">On-leave technician rejected</h3>
+<p class="font-grotesk text-sm text-[#F2EFE9] mt-2">Tech Dave Miller flagged on leave; system enforces roster rule and auto-reassigns to Maria Ortiz.</p>
+</div><div data-step="2" class="rule-card cursor-pointer p-6 bg-[#131313] transition-colors border border-[#2A2A2A] hover:border-white">
+<div class="flex items-center justify-between mb-2">
+<span class="font-mono-code text-[11px] text-[#C4C9AE] font-bold tracking-wider uppercase">RULE ENFORCEMENT • MOMENT 02</span>
+<span class="px-2 py-0.5 border border-[#2A2A2A] bg-[#1C1C1C] text-white font-mono-code text-[10px] uppercase">Financial Control</span>
+</div>
+<h3 class="font-monumental text-2xl uppercase text-white tracking-wide">Requester cannot approve own purchase</h3>
+<p class="font-grotesk text-sm text-[#F2EFE9] mt-2">Requisition for $450 replacement breaker blocked from self-approval; automatically routed to Facilities Lead.</p>
+</div><div data-step="3" class="rule-card cursor-pointer p-6 bg-[#131313] transition-colors border border-[#2A2A2A] hover:border-white">
+<div class="flex items-center justify-between mb-2">
+<span class="font-mono-code text-[11px] text-[#C4C9AE] font-bold tracking-wider uppercase">RULE ENFORCEMENT • MOMENT 03</span>
+<span class="px-2 py-0.5 border border-[#2A2A2A] bg-[#1C1C1C] text-white font-mono-code text-[10px] uppercase">Warehouse Ledger</span>
+</div>
+<h3 class="font-monumental text-2xl uppercase text-white tracking-wide">Approved purchase does NOT increase stock until receipt</h3>
+<p class="font-grotesk text-sm text-[#F2EFE9] mt-2">PO approved, but warehouse inventory count remains unchanged until physical barcode is scanned at receiving bay.</p>
+</div></div><div class="lg:col-span-5 bg-[#131313] border border-[#2A2A2A] p-5 sm:p-8 relative shadow-[2px_2px_0px_#2A2A2A] min-w-0 w-full overflow-hidden"><div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-[#2A2A2A]"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[#C5F135] text-lg">terminal</span><span class="font-mono-code text-xs uppercase tracking-widest text-white font-bold">EXECUTION INSPECTOR</span></div><span class="font-mono-code text-[10px] sm:text-xs text-[#C5F135] bg-[#1C1C1C] px-2 py-0.5 border border-[#C5F135]">ENGINE v4.9</span></div><div class="py-4 sm:py-6 flex flex-col gap-4 sm:gap-6" id="inspector-content"><div><span class="font-mono-code text-[10px] text-[#C4C9AE] uppercase tracking-widest">CURRENT INSPECTED DECISION</span><div class="font-monumental text-2xl sm:text-3xl uppercase text-white mt-1 break-words min-w-0" id="inspector-title">Technician Roster Conflict</div></div><div class="bg-[#0A0A0A] border border-[#2A2A2A] p-3 sm:p-4 font-mono-code text-[11px] sm:text-xs space-y-1.5 sm:space-y-2 text-[#F2EFE9] min-h-[140px] sm:min-h-[160px] overflow-x-auto w-full max-w-full min-w-0" id="execution-code"><div class="text-[#C4C9AE]">&gt; checking candidate: Dave Miller (ID #0412)</div><div class="text-white font-bold bg-[#2A2A2A] px-1">&gt; REJECT: active PTO flag from HCM roster table</div><div class="text-[#C5F135] font-bold">&gt; [SUGGESTED] auto-routed to certified alternate: Maria Ortiz (Cert: High Voltage)</div><div class="text-white font-bold">&gt; SUCCESS: Shift lock confirmed (08:22:14 AM)</div></div><div class="grid grid-cols-2 gap-3 sm:gap-4"><div class="p-3 sm:p-4 bg-[#1C1C1C] border border-[#2A2A2A]"><span class="font-mono-code text-[9px] sm:text-[10px] text-[#C4C9AE] uppercase tracking-widest">Override</span><p class="font-monumental text-xl sm:text-2xl text-white mt-1">DISABLED</p></div><div class="p-3 sm:p-4 bg-[#1C1C1C] border border-[#2A2A2A]"><span class="font-mono-code text-[9px] sm:text-[10px] text-[#C4C9AE] uppercase tracking-widest">Compliance</span><p class="font-monumental text-xl sm:text-2xl text-[#C5F135] mt-1">100%</p></div></div></div><div class="pt-3 sm:pt-4 border-t border-[#2A2A2A] flex items-center justify-between text-xs font-mono-code text-[#C4C9AE]"><span class="text-[11px] sm:text-xs">Policy verified</span><div class="flex items-center gap-1 text-[#C5F135]"><span class="material-symbols-outlined text-sm">lock</span><span class="text-[11px] sm:text-xs">TAMPER_PROOF</span></div></div></div></div></div></section><section class="relative w-full bg-[#0A0A0A] text-white crosshair-grid py-16 sm:py-28 lg:py-40 px-4 sm:px-6 lg:px-16 border-t border-[#2A2A2A] overflow-hidden"><div class="absolute inset-0 pointer-events-none flex items-center justify-center"><div class="w-[800px] h-[400px] border border-[#2A2A2A] rounded-full rotate-12"></div></div><div class="max-w-5xl mx-auto flex flex-col items-center text-center gap-6 sm:gap-8 relative z-10"><div class="inline-flex items-center gap-2 border border-[#2A2A2A] bg-[#131313] px-3 sm:px-4 py-1.5"><span class="w-2 h-2 bg-[#C5F135]"></span><span class="font-mono-code text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#C5F135]">ENTERPRISE CAMPUS READINESS</span></div><h2 class="font-monumental text-4xl sm:text-6xl md:text-7xl lg:text-8xl uppercase tracking-tight leading-[0.95] text-white break-words">SEE YOUR CAMPUS RUN AS<br><span class="text-[#C5F135] bg-[#1C1C1C] border border-[#2A2A2A] px-3 py-1 inline-block mt-2">ONE OPERATION.</span></h2><p class="font-grotesk text-base sm:text-xl sm:text-2xl text-[#F2EFE9] max-w-2xl font-light leading-relaxed">Bring clarity to every facility, department, and classroom workflow with unified institutional dispatch and verification.</p><div class="pt-4 sm:pt-6 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"><a class="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-[#C5F135] text-[#0A0A0A] font-grotesk font-bold text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.25em] flex items-center justify-center gap-3 hover:bg-[#F2EFE9] transition-colors border border-[#C5F135] shadow-[2px_2px_0px_#2A2A2A] min-h-[48px]" href="#simulation">EXPLORE CAMPUSOPS <span class="material-symbols-outlined text-lg">arrow_forward</span></a></div><p class="font-mono-code text-[11px] sm:text-xs text-[#C4C9AE] pt-2 sm:pt-4 px-2">No credit card required. Configured for higher education enterprise pilot programs.</p></div></section></main><footer class="w-full bg-[#0A0A0A] border-t border-[#2A2A2A] text-white"><div class="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-16 py-12 sm:py-16"><div class="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 pb-8 sm:pb-12 border-b border-[#2A2A2A]"><div class="md:col-span-5 flex flex-col gap-3 sm:gap-4"><div class="flex items-center gap-3"><div class="w-7 h-7 bg-[#C5F135] flex items-center justify-center font-monumental font-bold text-[#0A0A0A] text-base">CO</div><span class="font-monumental text-xl sm:text-2xl uppercase tracking-wider text-white">CAMPUSOPS</span></div><p class="font-grotesk text-xs sm:text-sm text-[#C4C9AE] max-w-md font-light leading-relaxed">Brutalist operational intelligence built for high-performance collegiate facilities, athletic directors, and campus infrastructure teams.</p></div><div class="md:col-span-7 flex flex-wrap items-center justify-start md:justify-end gap-x-6 sm:gap-x-10 gap-y-3 font-grotesk text-xs uppercase tracking-widest"><a class="text-[#C4C9AE] hover:text-[#C5F135] transition-colors py-1" href="#overview">Overview</a><a class="text-[#C4C9AE] hover:text-[#C5F135] transition-colors py-1" href="#who-it-helps">Who It Helps</a><a class="text-[#C4C9AE] hover:text-[#C5F135] transition-colors py-1" href="#how-it-works">How It Works</a><a class="text-[#C4C9AE] hover:text-[#C5F135] transition-colors py-1" href="#capabilities">Capabilities</a><a class="text-[#C4C9AE] hover:text-[#C5F135] transition-colors py-1" href="#simulation">Simulation</a></div></div><div class="pt-6 sm:pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono-code text-[11px] sm:text-xs text-[#C4C9AE]"><div class="inline-flex items-center gap-2 border border-[#2A2A2A] bg-[#131313] px-3 py-1.5"><span class="w-1.5 h-1.5 bg-[#C5F135]"></span><span class="uppercase tracking-wider">HACKATHON PROTOTYPE. FICTIONAL DATA.</span></div><div class="">© 2025 CampusOps Inc. All rights reserved. Architectural Broadsheet Engine.</div></div></div></footer><script>
+  // Mobile Nav Toggle
+  const toggleBtn = document.getElementById('mobile-nav-toggle');
+  const mobileNav = document.getElementById('mobile-nav-menu');
+  if (toggleBtn && mobileNav) {
+    toggleBtn.addEventListener('click', () => {
+      mobileNav.classList.toggle('hidden');
+    });
+  }
+
+  // Magnetic Button Physics & Radial Sweep Interaction
+  (function initMagneticCTA() {
+    const btn = document.getElementById('hero-magnetic-cta');
+    const sweep = document.getElementById('magnetic-sweep');
+    if (!btn || !sweep) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let vx = 0;
+    let vy = 0;
+    let isHovering = false;
+    let animFrame = null;
+
+    // Spring configuration
+    const stiffness = 260;
+    const damping = 18;
+    const magnetStrength = 10; // max pixel displacement multiplier / clamp
+
+    function updatePhysics() {
+      if (prefersReducedMotion.matches || !canHover.matches) return;
+
+      const dt = 1 / 60;
+      // Spring formula: F = -k * x - d * v
+      const fx = -stiffness * (currentX - targetX) - damping * vx;
+      const fy = -stiffness * (currentY - targetY) - damping * vy;
+
+      vx += fx * dt;
+      vy += fy * dt;
+      currentX += vx * dt;
+      currentY += vy * dt;
+
+      btn.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
+
+      // Continue animating until settled
+      if (isHovering || Math.abs(currentX) > 0.05 || Math.abs(currentY) > 0.05 || Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) {
+        animFrame = requestAnimationFrame(updatePhysics);
+      } else {
+        currentX = 0;
+        currentY = 0;
+        vx = 0;
+        vy = 0;
+        btn.style.transform = 'translate3d(0, 0, 0)';
+        animFrame = null;
+      }
+    }
+
+    function startPhysics() {
+      if (!animFrame && !prefersReducedMotion.matches && canHover.matches) {
+        animFrame = requestAnimationFrame(updatePhysics);
+      }
+    }
+
+    btn.addEventListener('mouseenter', (e) => {
+      if (prefersReducedMotion.matches) return;
+      isHovering = true;
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Calculate required diameter to cover entire button from click/entry coordinate
+      const maxDistX = Math.max(x, rect.width - x);
+      const maxDistY = Math.max(y, rect.height - y);
+      const radius = Math.hypot(maxDistX, maxDistY);
+      const diameter = radius * 2.1;
+
+      sweep.style.width = `${diameter}px`;
+      sweep.style.height = `${diameter}px`;
+      sweep.style.left = `${x}px`;
+      sweep.style.top = `${y}px`;
+
+      btn.classList.add('hovered');
+      startPhysics();
+    });
+
+    btn.addEventListener('mousemove', (e) => {
+      if (prefersReducedMotion.matches || !canHover.matches) return;
+      const rect = btn.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const normX = (e.clientX - centerX) / (rect.width / 2);
+      const normY = (e.clientY - centerY) / (rect.height / 2);
+
+      // Clamp normalized offset
+      const clampedX = Math.max(-1, Math.min(1, normX));
+      const clampedY = Math.max(-1, Math.min(1, normY));
+
+      targetX = clampedX * magnetStrength;
+      targetY = clampedY * magnetStrength;
+
+      startPhysics();
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      isHovering = false;
+      targetX = 0;
+      targetY = 0;
+      btn.classList.remove('hovered');
+      startPhysics();
+    });
+  })();
+
+  // Operations Simulation Script
+  (function initOperationsPreview() {
+    const scenarios = {
+      1: {
+        steps: [
+          {
+            badge: "RULE ENFORCEMENT • MOMENT 01",
+            policy: "System Policy 4.2",
+            title: "On-leave technician rejected",
+            desc: "Tech Dave Miller flagged on leave; system enforces roster rule and auto-reassigns to Maria Ortiz.",
+            inspectorTitle: "Technician Roster Conflict",
+            logs: [
+              "> checking candidate: Dave Miller (ID #0412)",
+              "> REJECT: active PTO flag from HCM roster table",
+              "> [SUGGESTED] auto-routed to certified alternate: Maria Ortiz (Cert: High Voltage)",
+              "> SUCCESS: Shift lock confirmed (08:22:14 AM)"
+            ],
+            p1: "DISABLED",
+            p2: "100%"
+          },
+          {
+            badge: "RULE ENFORCEMENT • MOMENT 02",
+            policy: "Financial Control",
+            title: "Requester cannot approve own purchase",
+            desc: "Requisition for $450 replacement breaker blocked from self-approval; automatically routed to Facilities Lead.",
+            inspectorTitle: "Separation of Duties Check",
+            logs: [
+              "> PO requisition #PR-7712 ($450.00)",
+              "> requester: Tech Maria Ortiz",
+              "> VALIDATION: Requester ID matches Approver ID -> VIOLATION",
+              "> [SUGGESTED] escalated to Facilities Director Marcus Vance",
+              "> SUCCESS: Re-routed via dual-sign pathway"
+            ],
+            p1: "ENFORCED",
+            p2: "AUDITED"
+          },
+          {
+            badge: "RULE ENFORCEMENT • MOMENT 03",
+            policy: "Warehouse Ledger",
+            title: "Approved purchase does NOT increase stock until receipt",
+            desc: "PO approved, but warehouse inventory count remains unchanged until physical barcode is scanned at receiving bay.",
+            inspectorTitle: "Perpetual Inventory Integrity",
+            logs: [
+              "> PO approved by Facilities Director",
+              "> ledger state: PENDING_RECEIPT",
+              "> inventory quantity unadjusted (available: 0)",
+              "> barcode scan event: AWAITING_PHYSICAL_BAY_DOCK",
+              "> SUCCESS: Anti-phantom inventory rule held"
+            ],
+            p1: "STRICT",
+            p2: "0 DRIFT"
+          }
+        ]
+      },
+      2: {
+        steps: [
+          {
+            badge: "NETWORK INFRASTRUCTURE • MOMENT 01",
+            policy: "AP Cluster Heartbeat",
+            title: "Access Point Mesh degraded in C-Wing",
+            desc: "Switch port drop triggers auto-diagnostic ping; 4 access points failing PoE negotiation.",
+            inspectorTitle: "Network Telemetry Triage",
+            logs: [
+              "> switch uplink CS-402 packet drop rate > 38%",
+              "> auto-triaged priority: ELEVATED (Class hours: Active)",
+              "> [SUGGESTED] Switch PoE reset issued to port bank 2",
+              "> status: Partial restore, field tech required"
+            ],
+            p1: "RESTRICTED",
+            p2: "99.8%"
+          },
+          {
+            badge: "CAMPUS NOTIFICATION • MOMENT 02",
+            policy: "Faculty Schedule Alert",
+            title: "Lecture continuity notice to 6 instructors",
+            desc: "Proactive alert dispatched to classroom podiums notifying lecturers to utilize offline presentation tools.",
+            inspectorTitle: "Registrar Context Engine",
+            logs: [
+              "> registrar timetable cross-referenced for C-Wing",
+              "> 6 live sessions identified (320 students affected)",
+              "> [SUGGESTED] LMS offline pack pushed to instructor terminals",
+              "> SUCCESS: Faculty notified 42 mins prior to lecture start"
+            ],
+            p1: "AUTOMATED",
+            p2: "0 DELAY"
+          },
+          {
+            badge: "DISPATCH LOGIC • MOMENT 03",
+            policy: "IT Escalation Hierarchy",
+            title: "Network engineer dispatched with spares",
+            desc: "Tech James Lee routed with pre-configured Cisco Catalyst replacement unit from secure storage cage.",
+            inspectorTitle: "Hardware Provisioning Lock",
+            logs: [
+              "> part allocated: CAT-9300-POE (Barcode: #NET-9921)",
+              "> locker cage 4 PIN generated for James Lee",
+              "> receipt verification: 2-factor physical badge scan",
+              "> SUCCESS: Hardware released from secure inventory"
+            ],
+            p1: "VERIFIED",
+            p2: "RECORDED"
+          }
+        ]
+      }
+    };
+
+    let activeScenario = 1;
+    let activeStep = 0;
+
+    const tabBtn1 = document.getElementById('tab-btn-1');
+    const tabBtn2 = document.getElementById('tab-btn-2');
+    const rulesContainer = document.getElementById('rules-container');
+    const inspectorTitle = document.getElementById('inspector-title');
+    const inspectorContent = document.getElementById('inspector-content');
+
+    function renderRules() {
+      const current = scenarios[activeScenario];
+      rulesContainer.innerHTML = '';
+
+      current.steps.forEach((step, idx) => {
+        const isSelected = idx === activeStep;
+        const card = document.createElement('div');
+        card.setAttribute('data-step', idx + 1);
+        card.className = `rule-card cursor-pointer p-6 bg-[#131313] transition-colors border ${
+          isSelected 
+            ? 'border-[#C5F135] shadow-[2px_2px_0px_#C5F135]' 
+            : 'border-[#2A2A2A] hover:border-white'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-mono-code text-[11px] ${isSelected ? 'text-[#C5F135]' : 'text-[#C4C9AE]'} font-bold tracking-wider uppercase">${step.badge}</span>
+            <span class="px-2 py-0.5 border border-[#2A2A2A] bg-[#1C1C1C] text-white font-mono-code text-[10px] uppercase">${step.policy}</span>
+          </div>
+          <h3 class="font-monumental text-2xl uppercase text-white tracking-wide">${step.title}</h3>
+          <p class="font-grotesk text-sm text-[#F2EFE9] mt-2">${step.desc}</p>
+        `;
+
+        card.addEventListener('click', () => {
+          activeStep = idx;
+          renderRules();
+          renderInspector();
+        });
+
+        rulesContainer.appendChild(card);
+      });
+    }
+
+    function renderInspector() {
+      const step = scenarios[activeScenario].steps[activeStep];
+      inspectorTitle.textContent = step.inspectorTitle;
+
+      const logLines = step.logs.map(log => {
+        let colorClass = "text-[#F2EFE9]";
+        if (log.includes("REJECT") || log.includes("VIOLATION")) colorClass = "text-white font-bold bg-[#2A2A2A] px-1";
+        else if (log.includes("[SUGGESTED]")) colorClass = "text-[#C5F135] font-bold";
+        else if (log.includes("SUCCESS")) colorClass = "text-white font-bold";
+        else if (log.includes("> checking") || log.includes("> switch") || log.includes("> registrar")) colorClass = "text-[#C4C9AE]";
+        return `<div class="${colorClass}">${log}</div>`;
+      }).join('');
+
+      const logContainer = inspectorContent.querySelector('.bg-\\[\\#0A0A0A\\]') || inspectorContent.querySelector('.font-mono-code.space-y-1\\.5');
+      if (logContainer) {
+        logContainer.innerHTML = logLines;
+      }
+
+      const paramBoxes = inspectorContent.querySelectorAll('.grid > div');
+      if (paramBoxes.length >= 2) {
+        paramBoxes[0].querySelector('p').textContent = step.p1;
+        paramBoxes[1].querySelector('p').textContent = step.p2;
+      }
+    }
+
+    tabBtn1.addEventListener('click', () => {
+      activeScenario = 1;
+      activeStep = 0;
+      tabBtn1.className = 'scenario-tab px-6 py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors bg-[#C5F135] text-[#0A0A0A] border border-[#C5F135]';
+      tabBtn2.className = 'scenario-tab px-6 py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors text-[#C4C9AE] hover:text-white bg-[#131313] border border-[#2A2A2A]';
+      renderRules();
+      renderInspector();
+    });
+
+    tabBtn2.addEventListener('click', () => {
+      activeScenario = 2;
+      activeStep = 0;
+      tabBtn2.className = 'scenario-tab px-6 py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors bg-[#C5F135] text-[#0A0A0A] border border-[#C5F135]';
+      tabBtn1.className = 'scenario-tab px-6 py-3 font-grotesk font-bold text-xs uppercase tracking-widest transition-colors text-[#C4C9AE] hover:text-white bg-[#131313] border border-[#2A2A2A]';
+      renderRules();
+      renderInspector();
+    });
+
+    renderRules();
+    renderInspector();
+  })();
+</script></body></html>

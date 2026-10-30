@@ -1,0 +1,384 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Technician Dashboard | TECH-OPS</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#474746",
+            "background": "#0A0A0A",
+            "primary-fixed-dim": "#abd60f",
+            "primary": "#fdffeb",
+            "on-secondary": "#31312d",
+            "tertiary-container": "#e3e0e0",
+            "surface-container-lowest": "#0e0e0e",
+            "on-error": "#690005",
+            "inverse-on-surface": "#313030",
+            "tertiary": "#fafeff",
+            "on-surface": "#e5e2e1",
+            "surface-container-highest": "#353534",
+            "outline-variant": "#444934",
+            "tertiary-fixed-dim": "#c8c6c5",
+            "primary-container": "#c5f135",
+            "on-background": "#e5e2e1",
+            "tertiary-fixed": "#e5e2e1",
+            "secondary-fixed": "#e5e2dc",
+            "on-tertiary": "#313030",
+            "on-surface-variant": "#c4c9ae",
+            "on-secondary-fixed-variant": "#474743",
+            "secondary-container": "#474743",
+            "error": "#ffb4ab",
+            "surface-container": "#201f1f",
+            "on-primary-container": "#556b00",
+            "on-primary-fixed-variant": "#3c4d00",
+            "secondary-fixed-dim": "#c9c6c1",
+            "on-secondary-container": "#b7b5af",
+            "primary-fixed": "#c7f337",
+            "inverse-primary": "#506600",
+            "on-primary": "#283500",
+            "error-container": "#93000a",
+            "surface-variant": "#353534",
+            "on-tertiary-container": "#646363",
+            "surface-tint": "#abd60f",
+            "surface-container-low": "#1c1b1b",
+            "surface-container-high": "#2a2a2a",
+            "surface-dim": "#131313",
+            "surface-bright": "#3a3939",
+            "on-error-container": "#ffdad6",
+            "outline": "#8e937b",
+            "inverse-surface": "#e5e2e1",
+            "secondary": "#c9c6c1",
+            "surface": "#131313",
+            "on-secondary-fixed": "#1c1c18",
+            "on-tertiary-fixed": "#1b1b1b",
+            "on-primary-fixed": "#161e00"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "label-caps": ["Inter", "sans-serif"],
+            "headline-lg-mobile": ["Oswald", "sans-serif"],
+            "headline-xl": ["Oswald", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "display-hero": ["Oswald", "sans-serif"],
+            "headline-md": ["Oswald", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "headline-sm": ["Oswald", "sans-serif"],
+            "headline-lg": ["Oswald", "sans-serif"],
+            "display-hero-mobile": ["Oswald", "sans-serif"],
+            "body-xl": ["Inter", "sans-serif"],
+            "headline-xl-mobile": ["Oswald", "sans-serif"],
+            "label-action": ["Inter", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-[#0A0A0A] text-[#F2EFE9] antialiased min-h-screen flex flex-col font-body-md select-none">
+<!-- Top App Bar / Header -->
+<header class="w-full bg-[#131313] border-b border-[#2A2A2A] px-4 lg:px-8 py-3 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+  <div class="w-7 h-7 rounded bg-[#C5F135] text-[#0A0A0A] font-black text-sm flex items-center justify-center font-mono tracking-tighter">CO</div>
+  <div class="flex flex-col">
+    <div class="flex items-center gap-1.5 leading-none">
+      <span class="font-['Oswald'] text-lg font-bold tracking-wider text-[#F2EFE9] uppercase">CAMPUSOPS</span>
+      <span class="text-[9px] font-mono px-1 py-0.5 rounded bg-[#C5F135] text-[#0A0A0A] font-black tracking-widest leading-none">TECHNICIAN</span>
+    </div>
+    <span class="text-[8px] font-mono text-[#C4C9AE] tracking-widest uppercase leading-none mt-0.5">OPERATIONS ENGINE</span>
+  </div>
+</div>
+<div class="flex items-center gap-4 flex-1 max-w-md justify-end">
+<div class="relative w-full max-w-xs hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#C4C9AE] text-lg" data-icon="search">search</span>
+<input class="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#F2EFE9] placeholder:text-[#C4C9AE] focus:outline-none focus:border-[#C5F135] transition-colors" placeholder="Search work orders, assets..." type="text">
+</div>
+<button aria-label="Notifications" class="relative p-2 rounded-lg bg-[#1C1C1C] text-[#C4C9AE] hover:text-[#F2EFE9] transition-colors border border-[#2A2A2A]">
+<span class="material-symbols-outlined text-lg" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 size-2 bg-[#C5F135] rounded-full"></span>
+</button>
+<div class="flex items-center gap-2.5 border-l border-[#2A2A2A] pl-4"><div class="w-8 h-8 rounded-full border border-[#C5F135] overflow-hidden bg-[#2A2A2A] bg-cover bg-center shrink-0" data-alt="A rugged industrial field technician portrait" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNxIQxSLaVoLoJ42OfazSiRGGrW4f2JHkNTnEH1jhL5hqcGqzTxlH3q56Jlau-vDT9mSFaHWfqvjQy6zI7TSqOEKzClSLT7ajjC04vbnctlGBkiF2uiFGAGS0UD5UuIzUpPzKTR0UlBFqL3mO-CWg9gAwP7HqD3iO2hIZ4JT1pnFwg1lildqNtY8KRcd89C8ISO3S4_VLuh__Usp08qKj1EsUObCFQpU6uakjAmJMc');"></div><div class="hidden md:flex flex-col text-left"><span class="text-xs font-bold font-mono text-[#F2EFE9] uppercase tracking-wider leading-tight">Marcus Vance</span><span class="text-[10px] font-mono text-[#C4C9AE] uppercase tracking-wider leading-tight">LEAD TECHNICIAN • FIELD OPS</span></div></div>
+</div>
+</div>
+</header>
+<!-- Layout Container (12-column Grid) -->
+<div class="max-w-7xl mx-auto w-full flex-1 px-4 lg:px-8 py-6">
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- Left Sidebar Navigation -->
+<aside class="col-span-12 md:col-span-3 lg:col-span-3 flex flex-col gap-5 bg-[#131313] p-4 rounded-lg border-2 border-[#2A2A2A] shadow-[4px_4px_0px_#0A0A0A]">
+<!-- Profile block -->
+<div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-3.5 mb-4 shadow-[3px_3px_0px_#0A0A0A] flex items-center gap-3"><div class="w-11 h-11 rounded-full border-2 border-[#C5F135] overflow-hidden bg-[#2A2A2A] flex items-center justify-center relative shrink-0"><div class="w-full h-full bg-cover bg-center" data-alt="Marcus Vance portrait" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNxIQxSLaVoLoJ42OfazSiRGGrW4f2JHkNTnEH1jhL5hqcGqzTxlH3q56Jlau-vDT9mSFaHWfqvjQy6zI7TSqOEKzClSLT7ajjC04vbnctlGBkiF2uiFGAGS0UD5UuIzUpPzKTR0UlBFqL3mO-CWg9gAwP7HqD3iO2hIZ4JT1pnFwg1lildqNtY8KRcd89C8ISO3S4_VLuh__Usp08qKj1EsUObCFQpU6uakjAmJMc');"></div><span class="w-2.5 h-2.5 bg-[#C5F135] rounded-full border-2 border-[#1C1C1C] absolute bottom-0 right-0"></span></div><div class="flex flex-col justify-center min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-[#F2EFE9] truncate font-sans">Marcus Vance</span><span class="size-2 rounded-full bg-[#C5F135] shrink-0"></span></div><span class="text-xs font-mono text-[#C4C9AE] truncate">Lead Field Operations</span><span class="text-[11px] font-mono text-[#8E937B] truncate">Shift A • Station Lead</span></div></div>
+<!-- Navigation Rows -->
+<nav aria-label="Primary Technician Navigation" class="flex flex-col gap-1.5">
+<!-- Active: Home -->
+<a class="flex items-center gap-3 px-3.5 py-3 rounded-md bg-[#C5F135] text-[#0A0A0A] font-bold text-sm font-label-action tracking-wide border border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#0A0A0A]" data-icon="home" style="font-variation-settings: &quot;FILL&quot; 1;">home</span>
+<span class="">Home</span>
+</a>
+<!-- Inactive: Work Orders -->
+<a class="flex items-center gap-3 px-3.5 py-3 rounded-md text-[#F2EFE9] hover:bg-[#1C1C1C] hover:text-[#F2EFE9] transition-colors font-medium text-sm font-label-action tracking-wide border border-transparent hover:border-[#2A2A2A]" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#C4C9AE]" data-icon="build">build</span>
+<span class="">Work Orders</span>
+</a>
+<!-- Inactive: Parts Requests -->
+<a class="flex items-center gap-3 px-3.5 py-3 rounded-md text-[#F2EFE9] hover:bg-[#1C1C1C] hover:text-[#F2EFE9] transition-colors font-medium text-sm font-label-action tracking-wide border border-transparent hover:border-[#2A2A2A]" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#C4C9AE]" data-icon="inventory_2">inventory_2</span>
+<span class="">Parts Requests</span>
+</a>
+<!-- Inactive: Schedule & Leave -->
+<a class="flex items-center gap-3 px-3.5 py-3 rounded-md text-[#F2EFE9] hover:bg-[#1C1C1C] hover:text-[#F2EFE9] transition-colors font-medium text-sm font-label-action tracking-wide border border-transparent hover:border-[#2A2A2A]" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#C4C9AE]" data-icon="calendar_month">calendar_month</span>
+<span class="">Schedule &amp; Leave</span>
+</a>
+<!-- Inactive: Notifications -->
+<a class="flex items-center justify-between px-3.5 py-3 rounded-md text-[#F2EFE9] hover:bg-[#1C1C1C] hover:text-[#F2EFE9] transition-colors font-medium text-sm font-label-action tracking-wide border border-transparent hover:border-[#2A2A2A]" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] text-[#C4C9AE]" data-icon="notifications">notifications</span>
+<span class="">Notifications</span>
+</div>
+<span class="bg-[#0A0A0A] text-[#C5F135] text-xs font-bold px-2 py-0.5 rounded border border-[#2A2A2A]">3</span>
+</a>
+</nav>
+<!-- Sync Engine Section -->
+<div class="p-3 rounded-lg bg-[#1C1C1C] border border-[#2A2A2A] flex flex-col gap-2.5">
+<div class="flex justify-between items-center text-xs font-medium">
+<span class="text-[#C4C9AE]">Sync Engine</span>
+<span class="text-[#C5F135] font-mono font-bold flex items-center gap-1.5">
+<span class="size-1.5 rounded-full bg-[#C5F135]"></span>
+      ONLINE
+    </span>
+</div>
+<div class="w-full bg-[#0A0A0A] h-2 rounded-full overflow-hidden border border-[#2A2A2A]">
+<div class="bg-[#C5F135] h-full w-full"></div>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="col-span-12 md:col-span-9 lg:col-span-9 flex flex-col gap-6">
+<!-- Header / Hero Segment -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#F2EFE9] p-6 rounded-lg border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A]">
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl md:text-4xl font-headline-xl font-bold tracking-tight text-[#0A0A0A] uppercase leading-none">
+YOUR WORK. MADE SIMPLE.
+</h1>
+<p class="text-xs md:text-sm text-[#1C1C1C] font-body-md font-medium mt-1">
+Live work order dispatch queue and shift readiness.
+</p>
+</div>
+<div class="flex items-center sm:shrink-0">
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#C5F135] hover:bg-[#C5F135]/90 text-[#0A0A0A] font-headline-sm font-bold text-sm uppercase px-6 py-3 rounded-lg border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none whitespace-nowrap">
+<span class="material-symbols-outlined text-lg font-bold" data-icon="arrow_forward">arrow_forward</span>
+<span class="">VIEW WORK ORDERS</span>
+</button>
+</div>
+</div>
+<!-- 2. KPI Cards (Solid Cream Surfaces with #0A0A0A Borders and Shadows) -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<!-- Card 1: Assigned -->
+<div class="bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-6 rounded-lg flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center justify-between text-[#2A2A2A] text-xs uppercase font-label-caps tracking-wider mb-2 font-bold">
+<span class="">Assigned</span>
+<div class="size-7 rounded bg-[#2A2A2A] text-[#F2EFE9] flex items-center justify-center border border-[#0A0A0A]">
+<span class="material-symbols-outlined text-base" data-icon="assignment_ind">assignment_ind</span>
+</div>
+</div>
+<div class="text-4xl md:text-5xl font-headline-lg font-bold text-[#0A0A0A] font-mono tracking-tight my-1">05</div>
+<div class="text-xs text-[#1C1C1C] font-medium mt-auto pt-2 border-t border-[#2A2A2A]/20">Active queue awaiting dispatch</div>
+</div>
+<!-- Card 2: In Progress -->
+<div class="bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-6 rounded-lg flex flex-col justify-between min-h-[160px] relative overflow-hidden">
+<div class="flex items-center justify-between text-[#2A2A2A] text-xs uppercase font-label-caps tracking-wider mb-2 font-bold">
+<span class="">In Progress</span>
+<div class="size-7 rounded bg-[#C5F135] border border-[#0A0A0A] text-[#0A0A0A] flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-base" data-icon="timelapse">timelapse</span>
+</div>
+</div>
+<div class="text-4xl md:text-5xl font-headline-lg font-bold text-[#0A0A0A] font-mono tracking-tight my-1 flex items-baseline gap-2">
+<span class="">01</span>
+<span class="text-[11px] font-sans font-bold bg-[#C5F135] text-[#0A0A0A] border border-[#0A0A0A] px-2 py-0.5 rounded uppercase shadow-[1px_1px_0px_#0A0A0A]">Active</span>
+</div>
+<div class="text-xs text-[#1C1C1C] font-medium mt-auto pt-2 border-t border-[#2A2A2A]/20">Under active diagnosis / bench</div>
+</div>
+<!-- Card 3: Completed -->
+<div class="bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] p-6 rounded-lg flex flex-col justify-between min-h-[160px]">
+<div class="flex items-center justify-between text-[#2A2A2A] text-xs uppercase font-label-caps tracking-wider mb-2 font-bold">
+<span class="">Completed</span>
+<div class="size-7 rounded bg-[#2A2A2A] text-[#F2EFE9] flex items-center justify-center border border-[#0A0A0A]">
+<span class="material-symbols-outlined text-base" data-icon="task_alt">task_alt</span>
+</div>
+</div>
+<div class="text-4xl md:text-5xl font-headline-lg font-bold text-[#0A0A0A] font-mono tracking-tight my-1">14</div>
+<div class="text-xs text-[#1C1C1C] font-medium mt-auto pt-2 border-t border-[#2A2A2A]/20">Shift closeout cycle validated</div>
+</div>
+</div>
+<!-- 4. Dispatch Work Orders Section (Cream Card with Strict 7-Color Styling) -->
+<section class="bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] rounded-lg p-5 flex flex-col gap-4">
+<div class="flex items-center justify-between pb-3 border-b-2 border-[#0A0A0A]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#0A0A0A] text-xl font-bold" data-icon="list_alt">list_alt</span>
+<h2 class="text-base font-bold uppercase tracking-wider font-headline-sm text-[#0A0A0A]">DISPATCH WORK ORDERS</h2>
+</div>
+<a class="text-xs font-bold text-[#0A0A0A] hover:underline flex items-center gap-1 font-label-action uppercase tracking-wider" href="#">
+<span class="">View All</span>
+<span class="material-symbols-outlined text-sm font-bold" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs border-collapse">
+<thead>
+<tr class="border-b-2 border-[#0A0A0A] text-[#0A0A0A] font-mono text-[11px] uppercase font-bold">
+<th class="py-2.5 px-3">Order ID</th>
+<th class="py-2.5 px-3">Issue Description</th>
+<th class="py-2.5 px-3">Location</th>
+<th class="py-2.5 px-3">Priority</th>
+<th class="py-2.5 px-3">Status</th>
+<th class="py-2.5 px-3 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2A2A2A]/20 text-[#0A0A0A]">
+<!-- Order 1: #TK-9082 -->
+<tr class="hover:bg-[#0A0A0A]/5 transition-colors group">
+<td class="py-3 px-3">
+<span class="font-mono font-bold text-[#0A0A0A] bg-[#C5F135] px-2 py-0.5 rounded border border-[#0A0A0A]">#TK-9082</span>
+</td>
+<td class="py-3 px-3 font-semibold text-[#0A0A0A] max-w-xs truncate">Podium electrical arc fault</td>
+<td class="py-3 px-3 text-[#1C1C1C] font-medium">Room B-204</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#0A0A0A] text-[#C5F135] border border-[#0A0A0A]">
+<span class="size-1.5 rounded-full bg-[#C5F135]"></span>
+Critical
+</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold bg-[#C5F135] text-[#0A0A0A] border border-[#0A0A0A]">
+In Progress
+</span>
+</td>
+<td class="py-3 px-3 text-right">
+<a class="inline-flex items-center font-bold text-xs bg-[#0A0A0A] text-[#F2EFE9] hover:bg-[#C5F135] hover:text-[#0A0A0A] px-3 py-1.5 rounded border border-[#0A0A0A] transition-colors shadow-[1px_1px_0px_#0A0A0A]" href="#">Open Flow →</a>
+</td>
+</tr>
+<!-- Order 2: #TK-9095 -->
+<tr class="hover:bg-[#0A0A0A]/5 transition-colors group">
+<td class="py-3 px-3">
+<span class="font-mono font-bold text-[#0A0A0A] bg-[#2A2A2A]/10 px-2 py-0.5 rounded border border-[#0A0A0A]/30">#TK-9095</span>
+</td>
+<td class="py-3 px-3 font-semibold text-[#0A0A0A] max-w-xs truncate">Air handler motor bearing</td>
+<td class="py-3 px-3 text-[#1C1C1C] font-medium">Science Plant East</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#C5F135] text-[#0A0A0A] border border-[#0A0A0A]">
+High
+</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-[#2A2A2A] text-[#F2EFE9] border border-[#0A0A0A]">
+Assigned
+</span>
+</td>
+<td class="py-3 px-3 text-right">
+<a class="inline-flex items-center font-bold text-xs bg-[#0A0A0A] text-[#F2EFE9] hover:bg-[#C5F135] hover:text-[#0A0A0A] px-3 py-1.5 rounded border border-[#0A0A0A] transition-colors shadow-[1px_1px_0px_#0A0A0A]" href="#">Open Flow →</a>
+</td>
+</tr>
+<!-- Order 3: #TK-9102 -->
+<tr class="hover:bg-[#0A0A0A]/5 transition-colors group">
+<td class="py-3 px-3">
+<span class="font-mono font-bold text-[#0A0A0A] bg-[#2A2A2A]/10 px-2 py-0.5 rounded border border-[#0A0A0A]/30">#TK-9102</span>
+</td>
+<td class="py-3 px-3 font-semibold text-[#0A0A0A] max-w-xs truncate">Sensor faucet leak</td>
+<td class="py-3 px-3 text-[#1C1C1C] font-medium">Library 2nd Fl</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-[#2A2A2A] text-[#F2EFE9] border border-[#0A0A0A]">
+Medium
+</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-[#1C1C1C]/10 text-[#0A0A0A] border border-[#0A0A0A]/30">
+Queued
+</span>
+</td>
+<td class="py-3 px-3 text-right">
+<a class="inline-flex items-center font-bold text-xs bg-[#0A0A0A] text-[#F2EFE9] hover:bg-[#C5F135] hover:text-[#0A0A0A] px-3 py-1.5 rounded border border-[#0A0A0A] transition-colors shadow-[1px_1px_0px_#0A0A0A]" href="#">Open Flow →</a>
+</td>
+</tr>
+<!-- Order 4: #TK-8991 -->
+<tr class="hover:bg-[#0A0A0A]/5 transition-colors group">
+<td class="py-3 px-3">
+<span class="font-mono font-bold text-[#0A0A0A] bg-[#2A2A2A]/10 px-2 py-0.5 rounded border border-[#0A0A0A]/30">#TK-8991</span>
+</td>
+<td class="py-3 px-3 font-semibold text-[#0A0A0A] max-w-xs truncate">Card reader intermittent</td>
+<td class="py-3 px-3 text-[#1C1C1C] font-medium">Athletics Gate 3</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#F2EFE9] text-[#2A2A2A] border border-[#2A2A2A]">
+Low
+</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-[#1C1C1C]/10 text-[#0A0A0A] border border-[#0A0A0A]/30">
+Queued
+</span>
+</td>
+<td class="py-3 px-3 text-right">
+<a class="inline-flex items-center font-bold text-xs bg-[#0A0A0A] text-[#F2EFE9] hover:bg-[#C5F135] hover:text-[#0A0A0A] px-3 py-1.5 rounded border border-[#0A0A0A] transition-colors shadow-[1px_1px_0px_#0A0A0A]" href="#">Open Flow →</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- 5. Shift Assignment Card (Solid Cream Surface #F2EFE9) -->
+<section class="bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] rounded-lg p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-3.5 w-full sm:w-auto">
+<div class="size-10 rounded-lg bg-[#0A0A0A] text-[#C5F135] flex items-center justify-center border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] shrink-0">
+<span class="material-symbols-outlined text-xl" data-icon="schedule">schedule</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[11px] uppercase font-label-caps tracking-wider text-[#2A2A2A] font-bold">Shift Assignment</span>
+<span class="text-sm font-bold text-[#0A0A0A]">Morning Shift • 07:00 – 15:30</span>
+</div>
+</div>
+<div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 border-[#2A2A2A]/20 pt-3 sm:pt-0">
+<div class="flex items-center gap-2 bg-[#0A0A0A] px-3.5 py-2 rounded-lg border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+<span class="size-2 rounded-full bg-[#C5F135] animate-pulse inline-block"></span>
+<span class="text-xs text-[#C5F135] font-bold font-mono tracking-wide">Quadrant East On-Call</span>
+</div>
+<button class="text-xs text-[#0A0A0A] bg-[#F2EFE9] hover:bg-[#0A0A0A] hover:text-[#F2EFE9] transition-colors font-bold uppercase tracking-wider px-4 py-2 rounded-lg border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] font-label-action active:translate-x-[1px] active:translate-y-[1px] active:shadow-none whitespace-nowrap">
+  Swap Request
+</button>
+</div>
+</section>
+</main>
+</div>
+</div>
+
+
+
+
+
+
+
+
+<div id="mouse-effects-layer" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden" aria-hidden="true"></div><style>@keyframes originkit-ring-expand{0%{width:0px;height:0px;opacity:1;border-width:2px}100%{width:70px;height:70px;opacity:0;border-width:2px}}.originkit-ring{position:absolute;border-radius:9999px;border-style:solid;border-color:#C5F135;pointer-events:none;transform:translate(-50%,-50%);animation:originkit-ring-expand 0.4s cubic-bezier(0.2,0.8,0.2,1) forwards}@media(prefers-reduced-motion:reduce){.originkit-ring{display:none!important}}</style></body></html>

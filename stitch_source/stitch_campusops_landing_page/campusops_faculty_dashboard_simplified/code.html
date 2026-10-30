@@ -1,0 +1,476 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Faculty Portal - Dashboard | CampusOps</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Oswald:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "background": "#0A0A0A",
+          "surface": "#131313",
+          "surface-container": "#1C1C1C",
+          "surface-elevated": "#2A2A2A",
+          "cream": "#F2EFE9",
+          "on-background": "#F2EFE9",
+          "on-surface-variant": "#C4C9AE",
+          "primary-fixed": "#C5F135",
+          "brand-lime": "#C5F135",
+          "outline": "#2A2A2A"
+        },
+        fontFamily: {
+          "sans": ["Inter", "sans-serif"],
+          "headline": ["Oswald", "sans-serif"],
+          "mono": ["JetBrains Mono", "monospace"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+  }
+</style>
+</head>
+<body class="bg-[#0A0A0A] text-[#F2EFE9] font-sans antialiased min-h-screen selection:bg-[#C5F135] selection:text-[#0A0A0A]">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between border-b-2 border-[#2A2A2A] bg-[#131313] px-4 sm:px-6 lg:px-8 py-3">
+<!-- Brand & System Telemetry -->
+<div class="flex items-center gap-4 lg:gap-6">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-[#C5F135] text-[#0A0A0A] flex items-center justify-center font-['Oswald'] font-bold text-lg border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] shrink-0">
+        CO
+      </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-[#F2EFE9] text-base font-['Oswald'] tracking-wider uppercase font-bold">CAMPUSOPS</span>
+<span class="text-[#0A0A0A] text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 bg-[#C5F135] rounded border border-[#0A0A0A] leading-none">FACULTY</span>
+</div>
+<span class="text-[#C4C9AE] text-[10px] font-mono tracking-widest uppercase">OPERATIONS ENGINE</span>
+</div>
+</div>
+<!-- Core Telemetry Breadcrumb -->
+<div class="hidden xl:flex items-center gap-2 pl-4 border-l border-[#2A2A2A] text-xs font-mono text-[#C4C9AE]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135] animate-pulse"></span>
+<span class="">CORE TELEMETRY: <strong class="text-[#F2EFE9]">OPERATIONAL</strong></span>
+</div>
+</div>
+<!-- Center Navigation Links -->
+<nav class="hidden md:flex items-center gap-6 lg:gap-8">
+<a class="text-[#C5F135] text-sm font-bold tracking-wide border-b-2 border-[#C5F135] pb-0.5" href="#">Overview</a>
+<a class="text-[#C4C9AE] hover:text-[#F2EFE9] text-sm font-semibold transition-colors" href="#">Schedule</a>
+<a class="text-[#C4C9AE] hover:text-[#F2EFE9] text-sm font-semibold transition-colors" href="#">Facilities</a>
+</nav>
+<!-- Right Actions: CTA & Profile Pill -->
+<div class="flex items-center gap-3 sm:gap-4">
+<button class="flex items-center gap-2 rounded-lg h-9 sm:h-10 px-3.5 sm:px-4 bg-[#C5F135] hover:bg-[#d4fa4c] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[3px_3px_0px_#0A0A0A] text-xs font-bold uppercase tracking-wider transition-all active:translate-x-[1px] active:translate-y-[1px]">
+<span class="material-symbols-outlined text-base font-bold">report_problem</span>
+<span class="hidden sm:inline">REPORT ROOM ISSUE →</span>
+<span class="sm:hidden">REPORT →</span>
+</button>
+<div class="flex items-center gap-2 pl-2 border-l border-[#2A2A2A]">
+<button class="w-9 h-9 rounded-lg bg-[#1C1C1C] border border-[#2A2A2A] text-[#C4C9AE] hover:text-[#F2EFE9] flex items-center justify-center transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-lg">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#C5F135]"></span>
+</button>
+<!-- Station Leader / Vance Pill -->
+<div class="flex items-center gap-2.5 px-2 py-1 rounded-lg bg-[#1C1C1C] border border-[#2A2A2A]">
+<div class="w-8 h-8 rounded-full border-2 border-[#C5F135] bg-[#2A2A2A] overflow-hidden shrink-0" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFfZ2kZHnoR70pDtcyHOymgzU7O0YB6T1GufK0jWbh9XhCnJj_fMnRRLKm9xgXtMvDsZxfhH-mf8_ae6wciZAoZOP-FvyBm-tZRx3tg4nL4WptoqcCuj7AvCx7mkcszZrQl1Ofv6QtU281t-B3q5zY3RUagW3DUzreUIZx_9UXf53FZNafLgMQHYAkkW-W8NXDMF31WBqNqjkuyfAdAE_dD8ObH_kg01MjE-_db-gm'); background-size: cover; background-position: center;"></div>
+<div class="hidden lg:flex flex-col text-left pr-1">
+<span class="text-xs font-bold text-[#F2EFE9] leading-tight">Dr. Vance</span>
+<span class="text-[10px] text-[#C4C9AE] font-mono">CS-DEPT • RM 412</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-63px)] w-full">
+<!-- Persistent Left Sidebar -->
+<aside class="w-64 border-r-2 border-[#2A2A2A] bg-[#131313] flex flex-col justify-between p-4 shrink-0 hidden lg:flex">
+<div class="flex flex-col gap-5">
+<!-- Faculty Identity Card -->
+<div class="p-3.5 rounded-xl bg-[#1C1C1C] border-2 border-[#2A2A2A] shadow-[3px_3px_0px_#0A0A0A] flex items-center gap-3">
+<div class="w-11 h-11 rounded-full border-2 border-[#C5F135] bg-[#2A2A2A] overflow-hidden shrink-0 shadow-[1px_1px_0px_#0A0A0A]" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFfZ2kZHnoR70pDtcyHOymgzU7O0YB6T1GufK0jWbh9XhCnJj_fMnRRLKm9xgXtMvDsZxfhH-mf8_ae6wciZAoZOP-FvyBm-tZRx3tg4nL4WptoqcCuj7AvCx7mkcszZrQl1Ofv6QtU281t-B3q5zY3RUagW3DUzreUIZx_9UXf53FZNafLgMQHYAkkW-W8NXDMF31WBqNqjkuyfAdAE_dD8ObH_kg01MjE-_db-gm'); background-size: cover; background-position: center;"></div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="text-[#F2EFE9] text-sm font-bold truncate">Dr. Vance</span>
+<span class="w-2 h-2 rounded-full bg-[#C5F135]"></span>
+</div>
+<span class="text-[#C4C9AE] text-xs truncate">Dept of Computer Sci...</span>
+<span class="text-[#C4C9AE] text-[11px] font-mono">Room 412 • Senior Faculty</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav aria-label="Sidebar navigation" class="flex flex-col gap-1.5">
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#1C1C1C] text-[#F2EFE9] font-bold text-sm border-2 border-[#2A2A2A] shadow-[2px_2px_0px_#0A0A0A] border-l-4 border-l-[#C5F135]" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#C5F135]" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="">Home</span>
+</div>
+<span class="text-[10px] font-mono bg-[#2A2A2A] text-[#C5F135] px-1.5 py-0.5 rounded font-bold">DASH</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#C4C9AE] hover:text-[#F2EFE9] hover:bg-[#1C1C1C] border border-transparent hover:border-[#2A2A2A] font-semibold text-sm transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="">My Timetable</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#C4C9AE] hover:text-[#F2EFE9] hover:bg-[#1C1C1C] border border-transparent hover:border-[#2A2A2A] font-semibold text-sm transition-all" href="#">
+<span class="material-symbols-outlined">report_problem</span>
+<span class="">Report Issue</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#C4C9AE] hover:text-[#F2EFE9] hover:bg-[#1C1C1C] border border-transparent hover:border-[#2A2A2A] font-semibold text-sm transition-all" href="#">
+<span class="material-symbols-outlined">meeting_room</span>
+<span class="">Room Requests</span>
+</a>
+<a class="flex items-center justify-between px-3.5 py-2.5 rounded-lg text-[#C4C9AE] hover:text-[#F2EFE9] hover:bg-[#1C1C1C] border border-transparent hover:border-[#2A2A2A] font-semibold text-sm transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">notifications</span>
+<span class="">Notifications</span>
+</div>
+<span class="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-[#C5F135] text-[#0A0A0A] font-bold text-[11px] font-mono">1</span>
+</a>
+<a class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[#C4C9AE] hover:text-[#F2EFE9] hover:bg-[#1C1C1C] border border-transparent hover:border-[#2A2A2A] font-semibold text-sm transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="">Help &amp; Ops FAQ</span>
+</a>
+</nav>
+</div>
+<!-- Dispatch Station Status -->
+<div class="p-3.5 rounded-xl bg-[#1C1C1C] border-2 border-[#2A2A2A] shadow-[2px_2px_0px_#0A0A0A] flex flex-col gap-2">
+<div class="flex items-center justify-between text-xs">
+<span class="flex items-center gap-2 font-bold text-[#F2EFE9] uppercase tracking-wider text-[11px]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135] animate-pulse"></span>
+          Building Ops Live
+        </span>
+<span class="text-[10px] font-mono text-[#C4C9AE] bg-[#2A2A2A] px-1.5 py-0.5 rounded">v2.4</span>
+</div>
+<div class="flex items-center justify-between text-[11px] text-[#C4C9AE] pt-1 border-t border-[#2A2A2A]">
+<span class="">Command Dispatch</span>
+<span class="text-[#C5F135] font-mono font-bold">ONLINE</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full gap-6">
+<!-- HERO COMPONENT: WARM CREAM NEO-BRUTALIST CONTAINER (SCREEN_25 SPEC) -->
+<section class="rounded-2xl border-2 border-[#0A0A0A] bg-[#F2EFE9] p-6 lg:p-8 shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between gap-6 relative overflow-hidden text-[#0A0A0A]">
+<!-- Top Metadata Strip -->
+<div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#0A0A0A]/10 pb-4">
+<div class="flex flex-wrap items-center gap-2 sm:gap-3">
+<span class="px-2.5 py-1 rounded-md bg-[#C5F135] text-[#0A0A0A] text-xs font-mono font-bold uppercase tracking-wider border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+            // FACULTY PORTAL
+          </span>
+<span class="px-2.5 py-1 rounded-md bg-[#0A0A0A] text-[#F2EFE9] text-xs font-mono font-medium">
+            DR. VANCE • ROOM 412
+          </span>
+</div>
+<div class="flex items-center gap-2 text-xs font-mono font-semibold text-[#0A0A0A] bg-[#0A0A0A]/5 px-2.5 py-1 rounded-md border-2 border-[#0A0A0A]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135] border border-[#0A0A0A]"></span>
+          ACTIVE SESSION: WEDNESDAY TERM 2
+        </div>
+</div>
+<!-- Main Headline & Subtitle -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+<div class="flex flex-col gap-2 max-w-2xl">
+<h1 class="text-[#0A0A0A] font-['Oswald'] uppercase font-bold text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none">
+            FOCUS ON TEACHING.
+          </h1>
+<p class="text-[#1C1C1C] text-sm sm:text-base leading-relaxed mt-1 font-medium max-w-xl">
+            Classroom readiness verified and automated facility support active for your upcoming sessions across campus.
+          </p>
+</div>
+<!-- Primary Hero Action -->
+<div class="shrink-0">
+<button class="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl h-12 px-6 bg-[#C5F135] hover:bg-[#d4fa4c] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] font-bold font-sans uppercase tracking-wider text-sm transition-all active:translate-x-[2px] active:translate-y-[2px]">
+<span class="material-symbols-outlined text-lg font-bold">campaign</span>
+<span class="">REPORT ROOM ISSUE →</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 3-KPI CARDS ROW (Exact Student Geometry & Brutalist Styling in Solid Cream #F2EFE9) -->
+<section aria-label="Faculty Metrics" class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5">
+<!-- 1. Today's Classes -->
+<div class="rounded-xl p-5 bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between gap-4 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-[#2A2A2A] text-xs font-bold uppercase tracking-wider font-sans">Today's Classes</span>
+<div class="w-8 h-8 rounded-lg bg-[#0A0A0A] flex items-center justify-center text-[#F2EFE9] border-2 border-[#0A0A0A]">
+<span class="material-symbols-outlined text-lg">school</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between pt-1">
+<p class="text-[#0A0A0A] text-5xl font-['Oswald'] font-bold leading-none tracking-tight">03</p>
+<div class="flex flex-col items-end">
+<span class="text-xs text-[#0A0A0A] font-bold flex items-center gap-1.5 bg-[#C5F135] px-2.5 py-1 rounded-md border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0A0A0A]"></span> On Track
+            </span>
+<span class="text-[11px] text-[#2A2A2A] font-mono mt-1 font-semibold">3 Scheduled</span>
+</div>
+</div>
+</div>
+<!-- 2. Room Issues -->
+<div class="rounded-xl p-5 bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between gap-4 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-[#2A2A2A] text-xs font-bold uppercase tracking-wider font-sans">Room Issues</span>
+<div class="w-8 h-8 rounded-lg bg-[#C5F135] flex items-center justify-center text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+<span class="material-symbols-outlined text-lg font-bold">warning</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between pt-1">
+<p class="text-[#0A0A0A] text-5xl font-['Oswald'] font-bold leading-none tracking-tight">01</p>
+<div class="flex flex-col items-end">
+<span class="text-xs text-[#0A0A0A] font-bold flex items-center gap-1 bg-[#C5F135] px-2.5 py-1 rounded-md border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+<span class="material-symbols-outlined text-xs font-bold">priority_high</span> Action Needed
+            </span>
+<span class="text-[11px] text-[#2A2A2A] font-mono mt-1 font-semibold">Room B-204</span>
+</div>
+</div>
+</div>
+<!-- 3. Pending Requests -->
+<div class="rounded-xl p-5 bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col justify-between gap-4 transition-all">
+<div class="flex items-center justify-between">
+<span class="text-[#2A2A2A] text-xs font-bold uppercase tracking-wider font-sans">Pending Requests</span>
+<div class="w-8 h-8 rounded-lg bg-[#0A0A0A] flex items-center justify-center text-[#F2EFE9] border-2 border-[#0A0A0A]">
+<span class="material-symbols-outlined text-lg">pending_actions</span>
+</div>
+</div>
+<div class="flex items-baseline justify-between pt-1">
+<p class="text-[#0A0A0A] text-5xl font-['Oswald'] font-bold leading-none tracking-tight">01</p>
+<div class="flex flex-col items-end">
+<span class="text-xs text-[#0A0A0A] font-bold bg-[#1C1C1C]/10 px-2.5 py-1 rounded-md border-2 border-[#0A0A0A]">Reviewing</span>
+<span class="text-[11px] text-[#2A2A2A] font-mono mt-1 font-semibold">Lab Extension</span>
+</div>
+</div>
+</div>
+</section>
+<!-- URGENT ROOM DISRUPTION ALERT COMPONENT (Solid Cream Surface #F2EFE9) -->
+<section class="rounded-xl border-2 border-[#0A0A0A] bg-[#F2EFE9] p-5 lg:p-6 shadow-[4px_4px_0px_#0A0A0A] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 relative overflow-hidden text-[#0A0A0A]">
+<div class="absolute left-0 top-0 bottom-0 w-2.5 bg-[#C5F135] border-r-2 border-[#0A0A0A]"></div>
+<div class="flex items-start gap-4 pl-2">
+<div class="w-12 h-12 rounded-xl bg-[#0A0A0A] flex items-center justify-center shrink-0 border-2 border-[#0A0A0A] text-[#C5F135] shadow-[2px_2px_0px_#0A0A0A]">
+<span class="material-symbols-outlined text-2xl font-bold">power_off</span>
+</div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-2.5">
+<span class="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#C5F135] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A]">
+              URGENT DISRUPTION
+            </span>
+<h2 class="text-[#0A0A0A] font-['Oswald'] uppercase font-bold text-xl tracking-wide">
+              ROOM B-204 COMPROMISED (POWER ISSUE)
+            </h2>
+</div>
+<p class="text-[#1C1C1C] text-sm mt-1.5 leading-relaxed max-w-2xl font-medium">
+            Power failure detected in main lectern &amp; projector circuits for <strong class="text-[#0A0A0A]">10:15 CS-301 Advanced Algorithms</strong> (42 enrolled students).
+          </p>
+<div class="mt-2.5 flex flex-wrap items-center gap-3 text-xs font-mono">
+<span class="flex items-center gap-1.5 bg-[#0A0A0A] px-2.5 py-1 rounded-md border border-[#0A0A0A] text-[#F2EFE9] font-medium">
+<span class="material-symbols-outlined text-xs text-[#C5F135]">verified</span>
+              Suggested: Room C-102 (Cap. 45)
+            </span>
+<span class="text-[#0A0A0A] font-bold flex items-center gap-1 bg-[#C5F135] px-2.5 py-1 rounded-md border-2 border-[#0A0A0A]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#0A0A0A]"></span>
+              Verified Power &amp; AV Ready
+            </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 w-full lg:w-auto shrink-0 pl-2 lg:pl-0">
+<button class="w-full lg:w-auto flex items-center justify-center gap-2 rounded-xl h-11 px-5 bg-[#C5F135] hover:bg-[#d4fa4c] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] text-xs font-bold font-sans uppercase tracking-wider transition-all active:translate-x-[2px] active:translate-y-[2px]">
+<span class="">RELOCATE CLASS →</span>
+</button>
+</div>
+</section>
+<!-- TWO-COLUMN WORKSPACE: TEACHING TIMETABLE & SIDE BULLETIN PANEL -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left 2 Cols: Today's Teaching Timetable -->
+<section class="lg:col-span-2 flex flex-col gap-4">
+<div class="flex items-center justify-between border-b-2 border-[#2A2A2A] pb-3">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[#C5F135] text-2xl font-bold">calendar_month</span>
+<h2 class="text-[#F2EFE9] font-['Oswald'] uppercase text-2xl tracking-wider font-bold">
+              TODAY'S TIMETABLE
+            </h2>
+</div>
+<span class="text-xs text-[#C4C9AE] font-mono tracking-wide bg-[#1C1C1C] px-3 py-1 rounded-md border border-[#2A2A2A]">
+            WEDNESDAY • 3 SESSIONS
+          </span>
+</div>
+<!-- Timetable Cards List -->
+<div class="flex flex-col gap-3.5">
+<!-- Row 1: 08:30 CS-101 Intro to Computing -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] transition-all gap-4 text-[#0A0A0A]">
+<div class="flex items-start sm:items-center gap-4">
+<div class="w-20 font-mono font-bold text-base text-[#F2EFE9] py-2 px-3 rounded-lg bg-[#2A2A2A] text-center border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] shrink-0">
+                08:30
+              </div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-base font-bold text-[#0A0A0A]">CS-101 Intro to Computing</span>
+<span class="text-[10px] font-mono text-[#0A0A0A] bg-[#C4C9AE]/50 px-2 py-0.5 rounded font-bold border border-[#0A0A0A]/40">LECTURE</span>
+</div>
+<div class="text-xs text-[#2A2A2A] flex flex-wrap items-center gap-2 mt-1.5 font-medium">
+<span class="flex items-center gap-1 text-[#0A0A0A] font-bold">
+<span class="material-symbols-outlined text-sm text-[#2A2A2A]">location_on</span>
+                    Turing 101
+                  </span>
+<span class="">•</span>
+<span class="font-mono text-[#0A0A0A] font-bold">85 Enrolled</span>
+<span class="">•</span>
+<span class="text-[#2A2A2A] font-mono font-medium">AV &amp; Microphones Online</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end sm:self-center shrink-0">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#0A0A0A] text-[#F2EFE9] border-2 border-[#0A0A0A]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135]"></span>
+                Operational / Ready
+              </span>
+<button class="w-9 h-9 flex items-center justify-center text-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-[#F2EFE9] rounded-lg bg-transparent border-2 border-[#0A0A0A] transition-colors" title="Session Options">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Row 2: 10:15 CS-301 Advanced Algorithms [Compromised / Power Issue] -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] border-l-[6px] border-l-[#C5F135] shadow-[4px_4px_0px_#0A0A0A] transition-all gap-4 text-[#0A0A0A] relative overflow-hidden">
+<div class="flex items-start sm:items-center gap-4">
+<div class="w-20 font-mono font-bold text-base text-[#0A0A0A] bg-[#C5F135] py-2 px-3 rounded-lg text-center border-2 border-[#0A0A0A] shrink-0 shadow-[2px_2px_0px_#0A0A0A]">
+                10:15
+              </div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-base font-bold text-[#0A0A0A]">CS-301 Advanced Algorithms</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#C5F135] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[1px_1px_0px_#0A0A0A]">
+                    IMPACTED
+                  </span>
+</div>
+<div class="text-xs text-[#2A2A2A] flex flex-wrap items-center gap-2 mt-1.5 font-medium">
+<span class="flex items-center gap-1 text-[#0A0A0A] font-bold">
+<span class="material-symbols-outlined text-sm text-[#0A0A0A]">warning</span>
+                    Room B-204
+                  </span>
+<span class="">•</span>
+<span class="font-mono text-[#0A0A0A] font-bold">42 Enrolled</span>
+<span class="">•</span>
+<span class="text-[#1C1C1C] font-mono font-semibold">Lectern Circuit Failed</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end sm:self-center shrink-0">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#0A0A0A] text-[#C5F135] border-2 border-[#0A0A0A]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135] animate-ping"></span>
+                Compromised (Power Issue)
+              </span>
+<button class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold font-sans uppercase bg-[#C5F135] hover:bg-[#d4fa4c] text-[#0A0A0A] border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] transition-transform active:translate-x-0.5 active:translate-y-0.5">
+<span class="">Relocate</span>
+<span class="material-symbols-outlined text-sm font-bold">north_east</span>
+</button>
+</div>
+</div>
+<!-- Row 3: 14:00 CS-504 Distributed Systems [Verified Ready] -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] transition-all gap-4 text-[#0A0A0A]">
+<div class="flex items-start sm:items-center gap-4">
+<div class="w-20 font-mono font-bold text-base text-[#F2EFE9] py-2 px-3 rounded-lg bg-[#2A2A2A] text-center border-2 border-[#0A0A0A] shadow-[2px_2px_0px_#0A0A0A] shrink-0">
+                14:00
+              </div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-base font-bold text-[#0A0A0A]">CS-504 Distributed Systems</span>
+<span class="text-[10px] font-mono text-[#0A0A0A] bg-[#C4C9AE]/50 px-2 py-0.5 rounded font-bold border border-[#0A0A0A]/40">LAB SESSION</span>
+</div>
+<div class="text-xs text-[#2A2A2A] flex flex-wrap items-center gap-2 mt-1.5 font-medium">
+<span class="flex items-center gap-1 text-[#0A0A0A] font-bold">
+<span class="material-symbols-outlined text-sm text-[#2A2A2A]">location_on</span>
+                    Lab 4B
+                  </span>
+<span class="">•</span>
+<span class="font-mono text-[#0A0A0A] font-bold">28 Enrolled</span>
+<span class="">•</span>
+<span class="text-[#2A2A2A] font-mono font-medium">Workstations Checked</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-end sm:self-center shrink-0">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#0A0A0A] text-[#F2EFE9] border-2 border-[#0A0A0A]">
+<span class="w-2 h-2 rounded-full bg-[#C5F135]"></span>
+                Verified Ready
+              </span>
+<button class="w-9 h-9 flex items-center justify-center text-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-[#F2EFE9] rounded-lg bg-transparent border-2 border-[#0A0A0A] transition-colors" title="Session Options">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Col: Bulletin Feed / Campus Notices in Solid Cream #F2EFE9 -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center justify-between border-b-2 border-[#2A2A2A] pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#C5F135] text-2xl font-bold">newspaper</span>
+<h2 class="text-[#F2EFE9] font-['Oswald'] uppercase text-2xl tracking-wider font-bold">
+              BULLETIN FEED
+            </h2>
+</div>
+<span class="text-xs text-[#C5F135] font-mono font-bold tracking-wide">LIVE FEED</span>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Notice Item 1 -->
+<div class="p-4 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col gap-2 text-[#0A0A0A]">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0A0A0A] bg-[#C5F135] px-2 py-0.5 rounded border-2 border-[#0A0A0A] shadow-[1px_1px_0px_#0A0A0A]">
+                FACILITY ADVISORY
+              </span>
+<span class="text-[11px] font-mono text-[#2A2A2A] font-bold">08:10 AM</span>
+</div>
+<h3 class="text-sm font-bold text-[#0A0A0A] leading-snug">
+              B-Wing Electrical Subpanel Inspection
+            </h3>
+<p class="text-xs text-[#1C1C1C] leading-relaxed font-medium">
+              Electrical engineering teams dispatched to B-Wing riser 3. Power reset scheduled between 10:00 - 11:30.
+            </p>
+</div>
+<!-- Notice Item 2 -->
+<div class="p-4 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col gap-2 text-[#0A0A0A]">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-[#F2EFE9] bg-[#0A0A0A] px-2 py-0.5 rounded border-2 border-[#0A0A0A]">
+                ROOM AUTOMATION
+              </span>
+<span class="text-[11px] font-mono text-[#2A2A2A] font-bold">Yesterday</span>
+</div>
+<h3 class="text-sm font-bold text-[#0A0A0A] leading-snug">
+              Smart Mic Recalibration Completed
+            </h3>
+<p class="text-xs text-[#1C1C1C] leading-relaxed font-medium">
+              Turing Hall and Faraday 202 acoustic profiles updated for multi-speaker lecture recordings.
+            </p>
+</div>
+<!-- Quick Action Card -->
+<div class="p-4 rounded-xl bg-[#F2EFE9] border-2 border-[#0A0A0A] shadow-[4px_4px_0px_#0A0A0A] flex flex-col gap-2.5 mt-1 text-[#0A0A0A]">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider text-[#0A0A0A] font-sans">FACULTY SUPPORT DESK</span>
+<span class="material-symbols-outlined text-[#0A0A0A] text-base">support_agent</span>
+</div>
+<p class="text-xs text-[#1C1C1C] font-medium leading-relaxed">
+              Instant technician dispatch is available for active lectures via the hotline or panic toggle.
+            </p>
+<button class="w-full mt-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#0A0A0A] hover:bg-[#1C1C1C] text-[#C5F135] border-2 border-[#0A0A0A] text-xs font-bold uppercase tracking-wider transition-colors shadow-[2px_2px_0px_#0A0A0A]">
+<span class="material-symbols-outlined text-sm text-[#C5F135]">call</span>
+<span class="">CALL DISPATCH STATION</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+
+
+<div id="mouse-effects-layer" class="fixed inset-0 pointer-events-none z-[9999] overflow-hidden" aria-hidden="true"></div><style>@keyframes originkit-ring-expand{0%{width:0px;height:0px;opacity:1;border-width:2px}100%{width:70px;height:70px;opacity:0;border-width:2px}}.originkit-ring{position:absolute;border-radius:9999px;border-style:solid;border-color:#C5F135;pointer-events:none;transform:translate(-50%,-50%);animation:originkit-ring-expand 0.4s cubic-bezier(0.2,0.8,0.2,1) forwards}@media(prefers-reduced-motion:reduce){.originkit-ring{display:none!important}}</style><script>(function(){const c=document.getElementById('mouse-effects-layer');if(!c)return;const rm=window.matchMedia('(prefers-reduced-motion: reduce)');window.addEventListener('pointerdown',function(e){if(rm.matches)return;const r=document.createElement('div');r.className='originkit-ring';r.style.left=e.clientX+'px';r.style.top=e.clientY+'px';c.appendChild(r);setTimeout(function(){if(r&&r.parentNode)r.parentNode.removeChild(r);},400);},{passive:true});})();</script></body></html>
