@@ -17,6 +17,7 @@ import { StudentReportsListPage } from './pages/student/StudentReportsListPage';
 import { ComplaintDetailsPage } from './pages/student/ComplaintDetailsPage';
 import { StudentAlertsPage } from './pages/student/StudentAlertsPage';
 import { StudentHelpPage } from './pages/student/StudentHelpPage';
+import { StudentEventsPage } from './pages/student/StudentEventsPage';
 
 // Faculty Portal Pages
 import { FacultyHomePage } from './pages/faculty/FacultyHomePage';
@@ -41,6 +42,7 @@ import { FacilitiesTriagePage } from './pages/facilities/FacilitiesTriagePage';
 import { FacilitiesWorkOrdersPage } from './pages/facilities/FacilitiesWorkOrdersPage';
 import { FacilitiesRoomsPage } from './pages/facilities/FacilitiesRoomsPage';
 import { FacilitiesRosterPage } from './pages/facilities/FacilitiesRosterPage';
+import { FacilitiesEventsPage } from './pages/facilities/FacilitiesEventsPage';
 
 // Procurement Manager Pages
 import { ProcurementRequestsPage } from './pages/procurement/ProcurementRequestsPage';
@@ -54,6 +56,7 @@ import { SysAdminDataPage } from './pages/sysadmin/SysAdminDataPage';
 import { SysAdminAuditPage } from './pages/sysadmin/SysAdminAuditPage';
 import { SysAdminUsersPage } from './pages/sysadmin/SysAdminUsersPage';
 import { SysAdminIntegrationsPage } from './pages/sysadmin/SysAdminIntegrationsPage';
+import { SysAdminReportsPage } from './pages/sysadmin/SysAdminReportsPage';
 
 /**
  * HashSyncHandler:
@@ -144,6 +147,7 @@ export default function App() {
               <Route path="report" element={<StudentReportPage />} />
               <Route path="reports" element={<StudentReportsListPage />} />
               <Route path="reports/:id" element={<ComplaintDetailsPage />} />
+              <Route path="events" element={<StudentEventsPage />} />
               <Route path="alerts" element={<StudentAlertsPage />} />
               <Route path="help" element={<StudentHelpPage />} />
             </Route>
@@ -185,6 +189,7 @@ export default function App() {
               <Route path="triage" element={<FacilitiesTriagePage />} />
               <Route path="work-orders" element={<FacilitiesWorkOrdersPage />} />
               <Route path="rooms" element={<FacilitiesRoomsPage />} />
+              <Route path="events" element={<FacilitiesEventsPage />} />
               <Route path="roster" element={<FacilitiesRosterPage />} />
               <Route path="alerts" element={<StudentAlertsPage />} />
             </Route>
@@ -203,6 +208,7 @@ export default function App() {
             <Route path="/app/sysadmin" element={<RoleLayout allowedRoles={['SYSTEM_ADMIN', 'SYSTEM_ADMINISTRATOR']} />}>
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<SysAdminOverviewPage />} />
+              <Route path="reports" element={<SysAdminReportsPage />} />
               <Route path="data" element={<SysAdminDataPage />} />
               <Route path="audit" element={<SysAdminAuditPage />} />
               <Route path="users" element={<SysAdminUsersPage />} />

@@ -7,10 +7,10 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * GET /api/procurement/requests
+ * GET /api/procurement or /api/procurement/requests
  * Returns list of purchase requests with lines and approval decisions.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get(['/', '/requests'], async (req: Request, res: Response) => {
   try {
     const { status, workOrderId } = req.query;
     const requests = await prisma.purchaseRequest.findMany({
@@ -54,10 +54,33 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/procurement/requests/:id
+ * GET /api/procurement/receipts
+ * Returns list of stock delivery receipts with receiving staff and purchase request details.
+ */
+router.get('/receipts', async (req: Request, res: Response) => {
+  try {
+    const receipts = await prisma.stockReceipt.findMany({
+      include: {
+        receiver: { select: { id: true, name: true, email: true } },
+        item: { select: { id: true, sku: true, name: true, unit: true } },
+        purchaseRequest: {
+          select: { id: true, reason: true, status: true, requester: { select: { name: true } } },
+        },
+      },
+      orderBy: { receivedAt: 'desc' },
+      take: 100,
+    });
+    res.json({ success: true, data: receipts });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+/**
+ * GET /api/procurement/:id or /api/procurement/requests/:id
  * Returns single purchase request dossier.
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get(['/:id', '/requests/:id'], async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const pr = await prisma.purchaseRequest.findUnique({
@@ -104,19 +127,31 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-const createPrSchema = z.object({
-  workOrderId: z.string().optional(),
-  reason: z.string().min(5, 'Reason must be at least 5 characters'),
-  lines: z
-    .array(
-      z.object({
-        itemId: z.string().min(1, 'itemId is required'),
-        quantity: z.number().int().positive('Quantity must be greater than zero'),
-        estimatedUnitCost: z.number().positive().optional(),
-      })
-    )
-    .min(1, 'At least one item line is required'),
-});
+const createPrSchema = z
+  .object({
+    workOrderId: z.string().optional(),
+    reason: z.string().optional(),
+    justification: z.string().optional(),
+    attachmentUrl: z.string().optional().nullable(),
+    lines: z
+      .array(
+        z.object({
+          itemId: z.string().optional(),
+          inventoryItemId: z.string().optional(),
+          quantity: z.number().int().positive('Quantity must be greater than zero'),
+          estimatedUnitCost: z.number().positive().optional(),
+        })
+      )
+      .min(1, 'At least one item line is required'),
+  })
+  .transform((data) => ({
+    ...data,
+    reason: data.reason || data.justification || 'Hardware spares replacement',
+    lines: data.lines.map((l) => ({
+      ...l,
+      itemId: l.itemId || l.inventoryItemId || 'INV-NET-01',
+    })),
+  }));
 
 /**
  * POST /api/procurement/requests
@@ -136,7 +171,7 @@ router.post(
         return;
       }
 
-      const { workOrderId, reason, lines } = parsed.data;
+      const { workOrderId, reason, lines, attachmentUrl } = parsed.data;
       const user = (req as any).user;
 
       // Verify items exist and calculate estimated total
@@ -169,6 +204,7 @@ router.post(
             status: 'PENDING_APPROVAL',
             estimatedTotal: estimatedTotal > 0 ? estimatedTotal : null,
             reason,
+            attachmentUrl: attachmentUrl || null,
           },
         });
 
@@ -384,12 +420,35 @@ router.post(
   }
 );
 
-const stockReceiptSchema = z.object({
-  purchaseRequestId: z.string().min(1, 'purchaseRequestId is required'),
-  itemId: z.string().min(1, 'itemId is required'),
-  quantityReceived: z.number().int().positive('quantityReceived must be greater than zero'),
-  condition: z.enum(['ACCEPTED', 'DAMAGED']).default('ACCEPTED'),
-});
+const stockReceiptSchema = z
+  .object({
+    purchaseRequestId: z.string().min(1, 'purchaseRequestId is required'),
+    itemId: z.string().optional(),
+    inventoryItemId: z.string().optional(),
+    quantityReceived: z.number().int().positive().optional(),
+    condition: z.enum(['ACCEPTED', 'DAMAGED']).default('ACCEPTED'),
+    carrier: z.string().optional(),
+    waybillNumber: z.string().optional(),
+    items: z
+      .array(
+        z.object({
+          inventoryItemId: z.string().optional(),
+          itemId: z.string().optional(),
+          quantityReceived: z.number().int().positive(),
+        })
+      )
+      .optional(),
+  })
+  .transform((data) => {
+    const firstItem = data.items?.[0];
+    const itemId = data.itemId || data.inventoryItemId || firstItem?.itemId || firstItem?.inventoryItemId || 'INV-NET-01';
+    const quantityReceived = data.quantityReceived || firstItem?.quantityReceived || 1;
+    return {
+      ...data,
+      itemId,
+      quantityReceived,
+    };
+  });
 
 /**
  * POST /api/procurement/receipts

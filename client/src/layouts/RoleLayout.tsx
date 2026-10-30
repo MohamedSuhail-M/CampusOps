@@ -49,6 +49,7 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ allowedRoles }) => {
           { id: 'home', label: t.nav.dashboard, icon: 'dashboard', path: '/app/student/home' },
           { id: 'report', label: t.nav.reportIssue, icon: 'add_circle', path: '/app/student/report' },
           { id: 'reports', label: t.nav.myReports, icon: 'assignment', path: '/app/student/reports' },
+          { id: 'events', label: 'Event Requests', icon: 'celebration', path: '/app/student/events' },
           { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/student/alerts' },
           { id: 'help', label: t.nav.help, icon: 'help', path: '/app/student/help' },
         ];
@@ -83,6 +84,7 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ allowedRoles }) => {
           { id: 'triage', label: t.nav.incidentTriage, icon: 'emergency', path: '/app/facilities/triage' },
           { id: 'work-orders', label: t.nav.workOrders, icon: 'assignment', path: '/app/facilities/work-orders' },
           { id: 'rooms', label: t.nav.rooms, icon: 'meeting_room', path: '/app/facilities/rooms' },
+          { id: 'events', label: 'Event Approvals', icon: 'event_available', path: '/app/facilities/events' },
           { id: 'roster', label: t.nav.roster, icon: 'engineering', path: '/app/facilities/roster' },
           { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/facilities/alerts' },
         ];
@@ -98,6 +100,7 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ allowedRoles }) => {
       case 'SYSTEM_ADMINISTRATOR':
         return [
           { id: 'overview', label: t.nav.systemOverview, icon: 'speed', path: '/app/sysadmin/overview' },
+          { id: 'reports', label: 'Reports & Analytics', icon: 'analytics', path: '/app/sysadmin/reports' },
           { id: 'data', label: t.nav.campusData, icon: 'qr_code_2', path: '/app/sysadmin/data' },
           { id: 'audit', label: t.nav.auditSecurity, icon: 'lock', path: '/app/sysadmin/audit' },
           { id: 'users', label: t.nav.usersRoles, icon: 'group', path: '/app/sysadmin/users' },

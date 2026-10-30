@@ -316,4 +316,493 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
   }
 });
 
+// -------------------------------------------------------------
+// 5. STUDENT FACILITY & EVENT REQUESTS WORKFLOW (Feature 4)
+// -------------------------------------------------------------
+
+const createFacilityRequestSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  roomId: z.string().min(1, 'Room is required'),
+  buildingId: z.string().optional().nullable(),
+  eventDate: z.string().min(1, 'Event date is required'),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  startsAt: z.string().optional(),
+  endsAt: z.string().optional(),
+  expectedAttendance: z.number().int().positive().default(30),
+  category: z.string().default('CLUB_EVENT'),
+  equipmentRequirements: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  attachmentUrl: z.string().optional().nullable(),
+});
+
+/**
+ * POST /api/rooms/facility-requests
+ * Student submission for event or facility use permission.
+ */
+router.post('/facility-requests', async (req: Request, res: Response) => {
+  const result = createFacilityRequestSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: result.error.errors[0]?.message || 'Invalid input.' },
+    });
+    return;
+  }
+
+  const {
+    title,
+    description,
+    roomId,
+    buildingId,
+    eventDate,
+    startTime = '10:00',
+    endTime = '12:00',
+    expectedAttendance,
+    category,
+    equipmentRequirements,
+    notes,
+    attachmentUrl,
+  } = result.data;
+
+  const user = req.user!;
+
+  try {
+    const room = await prisma.room.findFirst({
+      where: {
+        OR: [{ id: roomId }, { code: roomId }],
+      },
+      include: {
+        building: true,
+        roomOutages: { where: { status: 'ACTIVE' } },
+        roomBookings: { where: { status: 'CONFIRMED' } },
+      },
+    });
+
+    if (!room) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'ROOM_NOT_FOUND', message: `Requested room '${roomId}' does not exist.` },
+      });
+      return;
+    }
+
+    // Parse start and end timestamps
+    const dateStr = eventDate.includes('T') ? eventDate.split('T')[0] : eventDate;
+    const startsAt = result.data.startsAt ? new Date(result.data.startsAt) : new Date(`${dateStr}T${startTime}:00`);
+    const endsAt = result.data.endsAt ? new Date(result.data.endsAt) : new Date(`${dateStr}T${endTime}:00`);
+
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime()) || startsAt >= endsAt) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_TIME_RANGE', message: 'Start time must precede end time on the event date.' },
+      });
+      return;
+    }
+
+    // Check for room outage
+    if (room.roomOutages.length > 0) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'ROOM_OUTAGE',
+          message: `Room ${room.code} currently has an active facility outage and cannot be requested.`,
+        },
+      });
+      return;
+    }
+
+    // Check for conflicting confirmed bookings
+    const sTime = startsAt.getTime();
+    const eTime = endsAt.getTime();
+    const conflict = room.roomBookings.find((b) => {
+      const bStart = new Date(b.startsAt).getTime();
+      const bEnd = new Date(b.endsAt).getTime();
+      return Math.max(sTime, bStart) < Math.min(eTime, bEnd);
+    });
+
+    if (conflict) {
+      res.status(409).json({
+        success: false,
+        error: {
+          code: 'BOOKING_CONFLICT',
+          message: `Room ${room.code} already has a confirmed booking during this period (${conflict.purpose}).`,
+        },
+      });
+      return;
+    }
+
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const requestId = `FAC-${timestamp}-${randomSuffix}`;
+
+    const facilityRequest = await prisma.$transaction(async (tx) => {
+      const created = await tx.facilityRequest.create({
+        data: {
+          id: requestId,
+          requesterId: user.id,
+          title,
+          description,
+          buildingId: buildingId || room.buildingId,
+          roomId: room.id,
+          eventDate: new Date(dateStr),
+          startsAt,
+          endsAt,
+          expectedAttendance,
+          category,
+          equipmentRequirements,
+          notes,
+          attachmentUrl,
+          status: 'PENDING_APPROVAL',
+          createdAt: new Date(),
+        },
+        include: {
+          room: { include: { building: true } },
+          requester: { select: { id: true, name: true, email: true } },
+        },
+      });
+
+      // Audit log entry
+      await tx.auditLog.create({
+        data: {
+          id: `AUD-${timestamp}-${randomSuffix}`,
+          actorId: user.id,
+          action: 'SUBMIT_FACILITY_REQUEST',
+          entityType: 'FACILITY_REQUEST',
+          entityId: requestId,
+          beforeJson: null,
+          afterJson: JSON.stringify({
+            title,
+            roomCode: room.code,
+            startsAt: startsAt.toISOString(),
+            endsAt: endsAt.toISOString(),
+            status: 'PENDING_APPROVAL',
+          }),
+          createdAt: new Date(),
+        },
+      });
+
+      // Notify facilities administrator
+      const facilitiesAdmins = await tx.userRole.findMany({
+        where: { role: { code: 'FACILITIES_ADMIN' } },
+        select: { userId: true },
+      });
+
+      for (const fa of facilitiesAdmins) {
+        await tx.notification.create({
+          data: {
+            id: `NOT-${timestamp}-${Math.floor(1000 + Math.random() * 9000)}`,
+            recipientId: fa.userId,
+            eventType: 'FACILITY_REQUEST_SUBMITTED',
+            title: `New Event Request: ${title}`,
+            body: `Student ${user.name} submitted an event request for Room ${room.code} on ${dateStr}. Review pending approval.`,
+            createdAt: new Date(),
+          },
+        });
+      }
+
+      return created;
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Event and facility request submitted successfully for review.',
+      data: facilityRequest,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: err.message },
+    });
+  }
+});
+
+/**
+ * GET /api/rooms/facility-requests
+ * Returns facility requests. Students see own; staff see queue.
+ */
+router.get('/facility-requests', async (req: Request, res: Response) => {
+  const user = req.user!;
+  const userRoles = (user.roles || []).map((r: any) => (typeof r === 'string' ? r : r.code));
+  const isStaff = userRoles.some((r: string) => ['FACILITIES_ADMIN', 'SYSTEM_ADMIN'].includes(r));
+
+  const { status, roomId } = req.query;
+
+  try {
+    const where: any = {};
+    if (!isStaff) {
+      where.requesterId = user.id;
+    }
+    if (status && typeof status === 'string') {
+      where.status = status;
+    }
+    if (roomId && typeof roomId === 'string') {
+      where.roomId = roomId;
+    }
+
+    const requests = await prisma.facilityRequest.findMany({
+      where,
+      include: {
+        room: { include: { building: true } },
+        requester: { select: { id: true, name: true, email: true } },
+        reviewer: { select: { id: true, name: true } },
+        booking: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      data: requests,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: err.message },
+    });
+  }
+});
+
+/**
+ * GET /api/rooms/facility-requests/:id
+ * Returns single request details with live conflict check.
+ */
+router.get('/facility-requests/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const user = req.user!;
+  const userRoles = (user.roles || []).map((r: any) => (typeof r === 'string' ? r : r.code));
+  const isStaff = userRoles.some((r: string) => ['FACILITIES_ADMIN', 'SYSTEM_ADMIN'].includes(r));
+
+  try {
+    const facilityRequest = await prisma.facilityRequest.findUnique({
+      where: { id },
+      include: {
+        room: {
+          include: {
+            building: true,
+            roomOutages: { where: { status: 'ACTIVE' } },
+            roomBookings: { where: { status: 'CONFIRMED' } },
+          },
+        },
+        requester: { select: { id: true, name: true, email: true, department: true } },
+        reviewer: { select: { id: true, name: true } },
+        booking: true,
+      },
+    });
+
+    if (!facilityRequest) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Request not found.' } });
+      return;
+    }
+
+    if (!isStaff && facilityRequest.requesterId !== user.id) {
+      res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Access denied.' } });
+      return;
+    }
+
+    // Live conflict evaluation
+    const sTime = new Date(facilityRequest.startsAt).getTime();
+    const eTime = new Date(facilityRequest.endsAt).getTime();
+    const conflictingBookings = facilityRequest.room.roomBookings.filter((b) => {
+      if (facilityRequest.bookingId && b.id === facilityRequest.bookingId) return false;
+      const bStart = new Date(b.startsAt).getTime();
+      const bEnd = new Date(b.endsAt).getTime();
+      return Math.max(sTime, bStart) < Math.min(eTime, bEnd);
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ...facilityRequest,
+        hasConflicts: conflictingBookings.length > 0,
+        conflictingBookings,
+        hasActiveOutage: facilityRequest.room.roomOutages.length > 0,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: 'SERVER_ERROR', message: err.message } });
+  }
+});
+
+/**
+ * POST /api/rooms/facility-requests/:id/decide
+ * Facilities Admin reviews and approves or rejects request.
+ * Atomic transaction creates RoomBooking upon APPROVE.
+ */
+router.post(
+  '/facility-requests/:id/decide',
+  requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN']),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { decision, reviewNotes } = req.body;
+
+    if (!decision || !['APPROVE', 'REJECT'].includes(decision)) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: "decision must be 'APPROVE' or 'REJECT'." },
+      });
+      return;
+    }
+
+    const reviewer = req.user!;
+
+    try {
+      const existing = await prisma.facilityRequest.findUnique({
+        where: { id },
+        include: {
+          room: {
+            include: {
+              roomOutages: { where: { status: 'ACTIVE' } },
+              roomBookings: { where: { status: 'CONFIRMED' } },
+            },
+          },
+          requester: { select: { id: true, name: true, departmentId: true } },
+        },
+      });
+
+      if (!existing) {
+        res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Request not found.' } });
+        return;
+      }
+
+      if (existing.status !== 'PENDING_APPROVAL') {
+        res.status(400).json({
+          success: false,
+          error: { code: 'ALREADY_DECIDED', message: `Request is already in status '${existing.status}'.` },
+        });
+        return;
+      }
+
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+
+      const decisionResult = await prisma.$transaction(async (tx) => {
+        if (decision === 'REJECT') {
+          const rejected = await tx.facilityRequest.update({
+            where: { id },
+            data: {
+              status: 'REJECTED',
+              reviewerId: reviewer.id,
+              reviewNotes: reviewNotes || 'Facility request declined by administration.',
+              reviewedAt: new Date(),
+            },
+          });
+
+          // Notify student
+          await tx.notification.create({
+            data: {
+              id: `NOT-${timestamp}-${randomSuffix}`,
+              recipientId: existing.requesterId,
+              eventType: 'FACILITY_REQUEST_REJECTED',
+              title: `Event Request Rejected: ${existing.title}`,
+              body: `Your facility request for Room ${existing.room.code} was declined. Reason: ${reviewNotes || 'Administrative schedule conflict.'}`,
+              createdAt: new Date(),
+            },
+          });
+
+          // Audit log
+          await tx.auditLog.create({
+            data: {
+              id: `AUD-${timestamp}-${randomSuffix}`,
+              actorId: reviewer.id,
+              action: 'REJECT_FACILITY_REQUEST',
+              entityType: 'FACILITY_REQUEST',
+              entityId: id,
+              beforeJson: JSON.stringify({ status: 'PENDING_APPROVAL' }),
+              afterJson: JSON.stringify({ status: 'REJECTED', reviewerId: reviewer.id, reviewNotes }),
+              createdAt: new Date(),
+            },
+          });
+
+          return { facilityRequest: rejected, booking: null };
+        }
+
+        // APPROVE: Re-verify conflicts and outages inside transaction
+        if (existing.room.roomOutages.length > 0) {
+          throw new Error(`Cannot approve: Room ${existing.room.code} currently has an active facility outage.`);
+        }
+
+        const sTime = new Date(existing.startsAt).getTime();
+        const eTime = new Date(existing.endsAt).getTime();
+        const conflict = existing.room.roomBookings.find((b) => {
+          const bStart = new Date(b.startsAt).getTime();
+          const bEnd = new Date(b.endsAt).getTime();
+          return Math.max(sTime, bStart) < Math.min(eTime, bEnd);
+        });
+
+        if (conflict) {
+          throw new Error(`Cannot approve: Conflicting booking '${conflict.purpose}' already exists for Room ${existing.room.code}.`);
+        }
+
+        // 1. Create RoomBooking
+        const bookingId = `BKG-${timestamp}-${randomSuffix}`;
+        const newBooking = await tx.roomBooking.create({
+          data: {
+            id: bookingId,
+            roomId: existing.roomId,
+            departmentId: existing.requester.departmentId || 'DEP001',
+            facultyId: existing.requesterId,
+            startsAt: existing.startsAt,
+            endsAt: existing.endsAt,
+            status: 'CONFIRMED',
+            purpose: `Event: ${existing.title}`,
+          },
+        });
+
+        // 2. Update FacilityRequest
+        const approved = await tx.facilityRequest.update({
+          where: { id },
+          data: {
+            status: 'APPROVED',
+            reviewerId: reviewer.id,
+            reviewNotes: reviewNotes || 'Facility use approved by administration.',
+            reviewedAt: new Date(),
+            bookingId: newBooking.id,
+          },
+        });
+
+        // 3. Notify student
+        await tx.notification.create({
+          data: {
+            id: `NOT-${timestamp}-${randomSuffix}`,
+            recipientId: existing.requesterId,
+            eventType: 'FACILITY_REQUEST_APPROVED',
+            title: `Event Request Approved: ${existing.title}`,
+            body: `Your facility request for Room ${existing.room.code} on ${new Date(existing.startsAt).toLocaleDateString()} has been APPROVED. Booking ID: ${bookingId}.`,
+            createdAt: new Date(),
+          },
+        });
+
+        // 4. Audit log
+        await tx.auditLog.create({
+          data: {
+            id: `AUD-${timestamp}-${randomSuffix}`,
+            actorId: reviewer.id,
+            action: 'APPROVE_FACILITY_REQUEST',
+            entityType: 'FACILITY_REQUEST',
+            entityId: id,
+            beforeJson: JSON.stringify({ status: 'PENDING_APPROVAL' }),
+            afterJson: JSON.stringify({ status: 'APPROVED', reviewerId: reviewer.id, bookingId }),
+            createdAt: new Date(),
+          },
+        });
+
+        return { facilityRequest: approved, booking: newBooking };
+      });
+
+      res.json({
+        success: true,
+        message: `Facility request ${id} ${decision.toLowerCase()}d successfully.`,
+        data: decisionResult,
+      });
+    } catch (err: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'APPROVAL_ERROR', message: err.message },
+      });
+    }
+  }
+);
+
 export default router;

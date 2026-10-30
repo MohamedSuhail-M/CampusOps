@@ -5,7 +5,7 @@ import path from 'path';
 import multer from 'multer';
 import prisma from '../../prisma';
 import { authenticate } from '../../middleware/auth.middleware';
-import { runOfflineTriage } from '../../services/triage.service';
+import { runOfflineTriage, isSensitiveCategory } from '../../services/triage.service';
 import { detectIncidentCorrelation } from '../../services/incident_correlation.service';
 
 const router = Router();
@@ -44,6 +44,9 @@ const upload = multer({
 
 const submitIntakeSchema = z
   .object({
+    title: z.string().optional().nullable(),
+    category: z.string().optional().nullable(),
+    incidentDate: z.string().optional().nullable(),
     originalText: z.string().optional(),
     message: z.string().optional(),
     channel: z.enum(['WEB', 'QR', 'EMAIL', 'VOICE']).default('WEB'),
@@ -168,6 +171,8 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
   }
 
   const {
+    title: userTitle,
+    category: userProvidedCategory,
     originalText,
     channel,
     language: providedLang,
@@ -201,6 +206,9 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
 
     // 2. Run deterministic multilingual offline triage
     const triage = runOfflineTriage(originalText, resolvedBuildingId, resolvedRoomId, assetTag);
+
+    const finalCategory = userProvidedCategory && userProvidedCategory !== 'AI_SUGGESTED' ? userProvidedCategory : triage.category;
+    const isSensitive = isSensitiveCategory(finalCategory) || Boolean(triage.isSensitive);
 
     // 3. If room wasn't provided, check if triage extracted a recognized room
     if (!resolvedRoomId && triage.extractedRoomCode) {
@@ -269,7 +277,12 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
           language: triage.detectedLanguage || providedLang || 'en',
           inputMethod: providedMethod || (channel === 'VOICE' ? 'VOICE' : channel === 'QR' ? 'QR_TEXT' : 'TEXT'),
           normalizedText: triage.normalizedText || null,
-          aiMetadata: JSON.stringify(triage),
+          aiMetadata: JSON.stringify({
+            ...triage,
+            aiSuggestedCategory: triage.category,
+            finalCategory,
+            isSensitive,
+          }),
           reporterId: user.id,
           receivedAt: new Date(),
         },
@@ -329,12 +342,12 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
       const reference = `INC-2026-${randomSuffix}`;
 
       // Title Generation
-      let title = `${triage.category}: Reported in ${resolvedRoomId ? 'Room' : 'Campus'}`;
-      if (triage.extractedAssetType) {
+      let title = userTitle || `${finalCategory}: Reported in ${resolvedRoomId ? 'Room' : 'Campus'}`;
+      if (!userTitle && triage.extractedAssetType) {
         title = `${triage.extractedAssetType} issue in ${triage.extractedRoomCode || 'campus'}`;
-      } else {
+      } else if (!userTitle) {
         const words = originalText.trim().split(/\s+/).slice(0, 6).join(' ');
-        title = words.length > 0 ? `${words}...` : `${triage.category} Issue`;
+        title = words.length > 0 ? `${words}...` : `${finalCategory} Issue`;
       }
 
       const newIncident = await tx.incident.create({
@@ -342,9 +355,10 @@ const handleIntakeSubmission = async (req: Request, res: Response) => {
           id: incidentId,
           reference,
           title,
-          category: triage.category,
+          category: finalCategory,
           priority: triage.suggestedPriority,
           status: 'NEW',
+          isSensitive,
           buildingId: resolvedBuildingId,
           roomId: resolvedRoomId,
           assetId: resolvedAssetId,

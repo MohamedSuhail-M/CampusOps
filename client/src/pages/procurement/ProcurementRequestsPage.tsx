@@ -108,7 +108,22 @@ export const ProcurementRequestsPage: React.FC = () => {
                       {pr.id}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-brandCream">
-                      {pr.lines?.[0]?.item?.name || 'Hardware Parts'}
+                      <div>
+                        <span>{pr.lines?.[0]?.item?.name || 'Hardware Parts'}</span>
+                        {pr.attachmentUrl && (
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-xs text-brandLime">photo_camera</span>
+                            <a
+                              href={pr.attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-mono font-bold text-brandLime hover:underline"
+                            >
+                              View Technician Photo
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 font-mono text-neutral-300">
                       {pr.lines?.[0]?.quantity || 1} units
@@ -120,7 +135,7 @@ export const ProcurementRequestsPage: React.FC = () => {
                       <StatusBadge status={pr.status} />
                     </td>
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      {pr.status === 'SUBMITTED' || pr.status === 'PENDING' ? (
+                      {pr.status === 'PENDING_APPROVAL' || pr.status === 'SUBMITTED' || pr.status === 'PENDING' ? (
                         <div className="flex justify-end gap-2 font-mono text-xs">
                           <button
                             type="button"
@@ -128,7 +143,7 @@ export const ProcurementRequestsPage: React.FC = () => {
                               setSelectedPr(pr);
                               setActionType('APPROVE');
                             }}
-                            className="px-3 py-1 bg-brandLime text-brandDark font-bold rounded shadow"
+                            className="px-3 py-1 bg-brandLime text-brandDark font-bold rounded shadow hover:bg-[#b0dc28]"
                           >
                             Approve
                           </button>
@@ -138,7 +153,7 @@ export const ProcurementRequestsPage: React.FC = () => {
                               setSelectedPr(pr);
                               setActionType('REJECT');
                             }}
-                            className="px-3 py-1 bg-red-950 text-red-300 border border-red-700/60 font-bold rounded"
+                            className="px-3 py-1 bg-red-950 text-red-300 border border-red-700/60 font-bold rounded hover:bg-red-900"
                           >
                             Reject
                           </button>
@@ -171,6 +186,31 @@ export const ProcurementRequestsPage: React.FC = () => {
           loading={submitting}
         >
           <div className="space-y-3 font-mono text-xs text-brandCream">
+            {selectedPr.attachmentUrl && (
+              <div className="p-3 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl space-y-2">
+                <span className="text-[10px] text-brandLime uppercase font-bold block">
+                  Defective Part Evidence Photo:
+                </span>
+                <img
+                  src={selectedPr.attachmentUrl}
+                  alt="Defective Part Evidence"
+                  className="w-full max-h-48 object-contain rounded-lg border border-[#333] bg-black/40"
+                />
+              </div>
+            )}
+            <div className="p-3 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl space-y-1">
+              <p className="text-neutral-400">
+                Item: <span className="text-brandCream font-bold">{selectedPr.lines?.[0]?.item?.name || 'Spares'}</span> ({selectedPr.lines?.[0]?.quantity || 1} units)
+              </p>
+              <p className="text-neutral-400">
+                Reason: <span className="text-brandCream">{selectedPr.reason}</span>
+              </p>
+              {selectedPr.workOrderId && (
+                <p className="text-neutral-400">
+                  Work Order: <span className="text-brandLime font-bold">{selectedPr.workOrderId}</span>
+                </p>
+              )}
+            </div>
             <p>
               {actionType === 'APPROVE'
                 ? 'Verify budget and dual-control sign-off. Authorize purchase of replacement spare parts:'

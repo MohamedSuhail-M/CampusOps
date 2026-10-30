@@ -29,6 +29,12 @@ router.get('/', async (req: Request, res: Response) => {
     if (buildingId && typeof buildingId === 'string') where.buildingId = buildingId;
     if (roomId && typeof roomId === 'string') where.roomId = roomId;
 
+    const userRoles = (req.user?.roles || []).map((r: any) => (typeof r === 'string' ? r : r.code));
+    const isPrivileged = userRoles.includes('FACILITIES_ADMIN') || userRoles.includes('SYSTEM_ADMIN');
+    if (!isPrivileged) {
+      where.isSensitive = false;
+    }
+
     const incidents = await prisma.incident.findMany({
       where,
       include: {
@@ -112,6 +118,22 @@ router.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
+    // Role-based privacy protection for sensitive student incidents
+    if (incident.isSensitive) {
+      const userRoles = (req.user?.roles || []).map((r: any) => (typeof r === 'string' ? r : r.code));
+      const isPrivileged = userRoles.includes('FACILITIES_ADMIN') || userRoles.includes('SYSTEM_ADMIN');
+      const isReporter = incident.incidentReports.some(
+        (ir) => ir.intakeMessage?.reporterId === req.user?.id
+      );
+      if (!isPrivileged && !isReporter) {
+        res.status(403).json({
+          success: false,
+          error: { code: 'FORBIDDEN', message: 'Access denied: sensitive incident report.' },
+        });
+        return;
+      }
+    }
+
     // Lookup matching SLA policy
     const slaPolicy = await prisma.slaPolicy.findUnique({
       where: { priority: incident.priority },
@@ -173,6 +195,22 @@ router.patch('/:id/status', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'TE
         error: { code: 'NOT_FOUND', message: `Incident with ID '${id}' not found.` },
       });
       return;
+    }
+
+    // Role-based privacy protection for sensitive student incidents
+    if (incident.isSensitive) {
+      const userRoles = (req.user?.roles || []).map((r: any) => (typeof r === 'string' ? r : r.code));
+      const isPrivileged = userRoles.includes('FACILITIES_ADMIN') || userRoles.includes('SYSTEM_ADMIN');
+      const isReporter = incident.incidentReports.some(
+        (ir) => ir.intakeMessage?.reporterId === req.user?.id
+      );
+      if (!isPrivileged && !isReporter) {
+        res.status(403).json({
+          success: false,
+          error: { code: 'FORBIDDEN', message: 'Access denied: sensitive incident report.' },
+        });
+        return;
+      }
     }
 
     // Verify valid state transition

@@ -46,6 +46,9 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
   const navigate = useNavigate();
 
   // Form State
+  const [title, setTitle] = useState<string>('');
+  const [category, setCategory] = useState<string>('AI_SUGGESTED');
+  const [incidentDate, setIncidentDate] = useState<string>(new Date().toISOString().slice(0, 16));
   const [description, setDescription] = useState<string>('');
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
@@ -180,6 +183,9 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
       const res = await apiFetch('/api/intake/submit', {
         method: 'POST',
         body: JSON.stringify({
+          title: title.trim() || undefined,
+          category: category !== 'AI_SUGGESTED' ? category : undefined,
+          incidentDate,
           originalText: description,
           channel: finalMethod.includes('VOICE') ? 'VOICE' : finalMethod.includes('QR') ? 'QR' : 'WEB',
           language,
@@ -207,6 +213,9 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
 
   // Reset form
   const handleReset = () => {
+    setTitle('');
+    setCategory('AI_SUGGESTED');
+    setIncidentDate(new Date().toISOString().slice(0, 16));
     setDescription('');
     setSelectedBuildingId('');
     setSelectedRoomId('');
@@ -326,6 +335,14 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
           </button>
         </div>
 
+        {/* Canteen / Dining Sector Notice */}
+        {category === 'CANTEEN_HYGIENE' && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs font-mono text-amber-300 flex items-center gap-2">
+            <span className="material-symbols-outlined text-base">restaurant</span>
+            <span>Food / Canteen report: Location defaults to Central Campus Dining Hall & Food Court.</span>
+          </div>
+        )}
+
         {/* Verified Asset Banner if QR Scanned */}
         {verifiedAsset && (
           <div className="p-3 bg-brandLime/10 border border-brandLime/40 rounded-xl flex items-center justify-between text-xs font-mono">
@@ -397,6 +414,70 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
             </select>
           </div>
         </div>
+      </div>
+
+      {/* SECTION B2: Category & Incident Classification */}
+      <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5 shadow-[4px_4px_0px_#0A0A0A] space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-brandLime" />
+          <h3 className="font-display font-bold uppercase text-sm tracking-wider text-brandCream">
+            Incident Category &amp; Classification
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl px-3.5 py-2.5 text-xs text-brandCream font-mono focus:outline-none focus:border-brandLime"
+            >
+              <option value="AI_SUGGESTED">✦ AI Auto-Classification (Smart Triage)</option>
+              <option value="SAFETY_INCIDENT">🚨 Safety / Physical Altercation (Sensitive)</option>
+              <option value="STUDENT_MISCONDUCT">🛡️ Bullying / Misconduct / Harassment (Sensitive)</option>
+              <option value="CANTEEN_HYGIENE">🍽️ Canteen / Food Quality &amp; Hygiene</option>
+              <option value="WATER_SANITATION">🚰 Water Supply &amp; Sanitation</option>
+              <option value="CLEANLINESS">🧹 Classroom Cleanliness &amp; Housekeeping</option>
+              <option value="NETWORK">📶 Internet / Wi-Fi Connectivity</option>
+              <option value="ELECTRICAL">⚡ Electrical Faults &amp; Lighting</option>
+              <option value="HVAC">❄️ Air Conditioning &amp; Ventilation</option>
+              <option value="PLUMBING">🔧 Plumbing &amp; Restroom Repairs</option>
+              <option value="AV">📽️ Projector &amp; AV Equipment</option>
+              <option value="FURNITURE_EQUIPMENT">🪑 Furniture &amp; Physical Fixtures</option>
+              <option value="LOST_AND_FOUND">🔍 Lost &amp; Found Property</option>
+              <option value="GENERAL">📋 Other Campus Grievance</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+              Incident Title / Short Subject (Optional)
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Canteen food hygiene issue, Projector bulb blown"
+              className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl px-3.5 py-2.5 text-xs text-brandCream font-mono focus:outline-none focus:border-brandLime"
+            />
+          </div>
+        </div>
+
+        {/* Sensitive Safety & Emergency Advisory Banner */}
+        {(category === 'SAFETY_INCIDENT' || category === 'STUDENT_MISCONDUCT' || triageData?.triage?.isSensitive) && (
+          <div className="p-3.5 bg-red-950/40 border border-red-700/60 rounded-xl space-y-1.5">
+            <div className="flex items-center gap-2 text-red-400 font-mono text-xs font-bold uppercase">
+              <span className="material-symbols-outlined text-base">security</span>
+              <span>Confidential Safety Routing Protocol</span>
+            </div>
+            <p className="text-[11px] font-sans text-neutral-300 leading-relaxed">
+              This report contains sensitive incident details and is automatically restricted from general queues. It will be routed directly to authorized Campus Security and Student Affairs officers. For active physical threats or emergencies, contact Campus Security Dispatch immediately at Ext 999.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* SECTION C: Describe Issue with Voice Dictation */}

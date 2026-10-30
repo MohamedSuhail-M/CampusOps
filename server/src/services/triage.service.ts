@@ -9,9 +9,66 @@ export interface TriageResult {
   extractedAssetType: string | null;
   missingInformation: string[];
   explanation: string;
+  isSensitive?: boolean;
+  recommendedTeam?: string;
+}
+
+export const SENSITIVE_CATEGORIES = ['SAFETY_INCIDENT', 'SAFETY', 'STUDENT_MISCONDUCT', 'HARASSMENT'];
+
+export function isSensitiveCategory(category: string): boolean {
+  return SENSITIVE_CATEGORIES.includes(category.toUpperCase());
 }
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  SAFETY_INCIDENT: [
+    'fight', 'fighting', 'altercation', 'violence', 'assault', 'brawl', 'physical clash', 'punch', 'attack', 'brawling', 'hit each other',
+    // Tamil
+    'சண்டை', 'தாக்குதல்', 'மோதல்', 'அடிதடி', 'அடித்தார்',
+    // Hindi
+    'लड़ाई', 'झगड़ा', 'मारपीट', 'हमला', 'हाथापाई'
+  ],
+  STUDENT_MISCONDUCT: [
+    'bully', 'bullying', 'harass', 'harassment', 'ragging', 'ragged', 'threat', 'threaten', 'misconduct', 'stalk', 'stalking', 'abuse', 'abusive',
+    // Tamil
+    'துன்புறுத்தல்', 'ராகிங்', 'மிரட்டல்', 'கேலி',
+    // Hindi
+    'बदमाशी', 'उत्पीड़न', 'रैगिंग', 'धमकी', 'गाली'
+  ],
+  CANTEEN_HYGIENE: [
+    'canteen', 'food', 'cafeteria', 'meal', 'spoiled', 'rotten', 'smelled bad', 'smell bad', 'bad smell food', 'dirty plate', 'insects', 'contaminated', 'taste bad', 'stale', 'catering', 'mess', 'dining',
+    // Tamil
+    'உணவு', 'கேண்டீன்', 'சாப்பாடு', 'கெட்டுப்போன', 'நாற்றம்', 'பூச்சி', 'அசுத்தம்',
+    // Hindi
+    'खाना', 'कैंटीन', 'भोजन', 'बासी', 'सड़ा', 'बदबू', 'कीड़ा', 'गंदा'
+  ],
+  WATER_SANITATION: [
+    'water supply', 'no water', 'drinking water', 'tap water', 'tank', 'sanitation', 'washroom', 'restroom', 'toilet dirty', 'foul smell', 'sewage', 'drainage',
+    // Tamil
+    'குடிநீர்', 'தண்ணீர் இல்லை', 'கழிப்பறை நாற்றம்', 'சாக்கடை',
+    // Hindi
+    'पानी नहीं', 'पीने का पानी', 'शौचालय', 'सीवर'
+  ],
+  CLEANLINESS: [
+    'trash', 'garbage', 'dirty', 'dust', 'litter', 'cleaning', 'sweeping', 'housekeeping', 'stained', 'unhygienic', 'waste', 'spill',
+    // Tamil
+    'குப்பை', 'அழுக்கு', 'தூய்மை', 'சுத்தம் இல்லை',
+    // Hindi
+    'कचरा', 'गंदगी', 'सफाई', 'झाड़ू'
+  ],
+  FURNITURE_EQUIPMENT: [
+    'desk', 'chair', 'bench', 'table', 'door', 'window', 'lock', 'broken glass', 'whiteboard', 'blackboard', 'podium', 'hinge', 'furniture',
+    // Tamil
+    'மேஜை', 'நாற்காலி', 'கதவு', 'ஜன்னல்', 'பூட்டு', 'பலகை',
+    // Hindi
+    'मेज', 'कुर्सी', 'दरवाजा', 'खिड़की', 'ताला', 'फर्नीचर'
+  ],
+  LOST_AND_FOUND: [
+    'lost', 'found', 'missing', 'left behind', 'misplaced', 'wallet', 'id card', 'keys', 'charger', 'bag',
+    // Tamil
+    'காணவில்லை', 'தொலைந்துவிட்டது', 'கிடைத்தது',
+    // Hindi
+    'खो गया', 'गुम', 'मिला', 'बटुआ'
+  ],
   ELECTRICAL: [
     'spark', 'sparking', 'electric', 'shock', 'power', 'socket', 'switch', 'mcb', 'wire', 'conduit', 'light', 'tube', 'blackout', 'short circuit',
     // Tamil
@@ -34,14 +91,14 @@ const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'एसी', 'कूलिंग', 'गर्म', 'हवा'
   ],
   PLUMBING: [
-    'pipe', 'leak', 'drain', 'clog', 'clogged', 'toilet', 'flush', 'sink', 'faucet', 'valve', 'sewage', 'overflow', 'tap', 'water pressure',
+    'pipe', 'drain', 'clog', 'clogged', 'sink', 'faucet', 'valve', 'overflow', 'tap', 'water pressure',
     // Tamil
-    'குழாய்', 'கசிவு', 'தண்ணீர்', 'அடைப்பு', 'கழிவறை', 'தொட்டி',
+    'குழாய்', 'கசிவு', 'அடைப்பு', 'தொட்டி',
     // Hindi
-    'पाइप', 'लीक', 'रिसाव', 'पानी', 'जाम', 'शौचालय', 'नल'
+    'पाइप', 'रिसाव', 'जाम', 'नल'
   ],
   AV: [
-    'projector', 'screen', 'hdmi', 'mic', 'microphone', 'speaker', 'audio', 'sound', 'display', 'monitor', 'podium', 'av',
+    'projector', 'screen', 'hdmi', 'mic', 'microphone', 'speaker', 'audio', 'sound', 'display', 'monitor', 'av',
     // Tamil
     'புரொஜெக்டர்', 'ப்ரொஜெக்டர்', 'ஒலிபெருக்கி', 'மைக்', 'திரை',
     // Hindi
@@ -110,9 +167,10 @@ export function runOfflineTriage(
     }
   }
 
-  // 2. Detect Priority
+  // 2. Detect Priority & Sensitivity
   let suggestedPriority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
   let explanation = '';
+  const isSensitive = isSensitiveCategory(detectedCategory);
 
   const hasCriticalKeyword = CRITICAL_KEYWORDS.some((kw) => lowerText.includes(kw));
   const hasHighKeyword = HIGH_KEYWORDS.some((kw) => lowerText.includes(kw));
@@ -123,18 +181,40 @@ export function runOfflineTriage(
     (lowerText.includes('wifi') || lowerText.includes('wi-fi') || lowerText.includes('internet') || lowerText.includes('network') || lowerText.includes('router') || lowerText.includes('வைஃபை') || lowerText.includes('वाईफाई')) &&
     (lowerText.includes('down') || lowerText.includes('failed') || lowerText.includes('disconnected') || lowerText.includes('outage') || lowerText.includes('வேலை செய்யவில்லை') || lowerText.includes('काम नहीं कर रहा'));
 
-  if (hasCriticalKeyword) {
+  if (detectedCategory === 'SAFETY_INCIDENT') {
+    suggestedPriority = 'CRITICAL';
+    explanation = 'Elevated to CRITICAL due to physical altercation / student safety emergency. Routed to Campus Security.';
+  } else if (detectedCategory === 'STUDENT_MISCONDUCT') {
+    suggestedPriority = 'HIGH';
+    explanation = 'Elevated to HIGH for student misconduct / harassment report. Routed to Campus Administration.';
+  } else if (hasCriticalKeyword) {
     suggestedPriority = 'CRITICAL';
     explanation = 'Elevated to CRITICAL due to safety hazards, electrical sparks, flood, or fire danger.';
   } else if (hasHighKeyword || isNetworkOutage || lowerText.includes('exam') || lowerText.includes('தேர்வு') || lowerText.includes('परीक्षा')) {
     suggestedPriority = 'HIGH';
     explanation = 'Elevated to HIGH due to classroom, academic lecture, or widespread network disruption.';
-  } else if (hasMediumKeyword) {
+  } else if (hasMediumKeyword || detectedCategory === 'CANTEEN_HYGIENE' || detectedCategory === 'WATER_SANITATION') {
     suggestedPriority = 'MEDIUM';
-    explanation = 'Assigned MEDIUM priority for standard functional repair.';
+    explanation = 'Assigned MEDIUM priority for operational and health standards maintenance.';
   } else {
     suggestedPriority = 'LOW';
-    explanation = 'Assigned standard LOW priority for routine maintenance.';
+    explanation = 'Assigned standard LOW priority for routine maintenance and campus reports.';
+  }
+
+  // Determine Recommended Team
+  let recommendedTeam = 'Facilities Technical Services';
+  if (isSensitive) {
+    recommendedTeam = 'Campus Safety & Student Affairs';
+  } else if (detectedCategory === 'CANTEEN_HYGIENE') {
+    recommendedTeam = 'Campus Catering & Health Inspection';
+  } else if (detectedCategory === 'WATER_SANITATION') {
+    recommendedTeam = 'Estate Maintenance & Sanitation';
+  } else if (detectedCategory === 'CLEANLINESS') {
+    recommendedTeam = 'Housekeeping & Campus Cleaning';
+  } else if (detectedCategory === 'FURNITURE_EQUIPMENT') {
+    recommendedTeam = 'Carpentry & Facilities Maintenance';
+  } else if (detectedCategory === 'LOST_AND_FOUND') {
+    recommendedTeam = 'Campus Information & Security Desk';
   }
 
   // 3. Extract Location from Text (e.g. "B-204", "Room 204", "Building B", "பி-204", "कमरा B-204")
@@ -206,5 +286,7 @@ export function runOfflineTriage(
     extractedAssetType,
     missingInformation: missingInfo,
     explanation,
+    isSensitive,
+    recommendedTeam,
   };
 }

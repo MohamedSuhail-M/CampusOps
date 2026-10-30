@@ -56,6 +56,8 @@ model User {
   notifications        Notification[]
   auditLogs            AuditLog[]
   uploadedEvidences    Evidence[]
+  facilityRequests     FacilityRequest[]  @relation("FacilityRequester")
+  reviewedFacilityRequests FacilityRequest[] @relation("FacilityRequestReviewer")
 
   @@map("users")
 }
@@ -91,10 +93,11 @@ model Room {
   capacity     Int
   roomType     String        @map("room_type")
   status       String        @default("ACTIVE")
-  assets       Asset[]
-  roomBookings RoomBooking[]
-  roomOutages  RoomOutage[]
-  incidents    Incident[]
+  assets           Asset[]
+  roomBookings     RoomBooking[]
+  roomOutages      RoomOutage[]
+  incidents        Incident[]
+  facilityRequests FacilityRequest[]
 
   @@map("rooms")
 }
@@ -170,9 +173,10 @@ model RoomBooking {
   faculty      User              @relation(fields: [facultyId], references: [id])
   startsAt     DateTime          @map("starts_at")
   endsAt       DateTime          @map("ends_at")
-  status       String
-  purpose      String
-  requirements RoomRequirement[]
+  status          String
+  purpose         String
+  requirements    RoomRequirement[]
+  facilityRequest FacilityRequest?
 
   @@index([roomId, startsAt, endsAt])
   @@map("room_bookings")
@@ -245,6 +249,7 @@ model Incident {
   category        String
   priority        String
   status          String
+  isSensitive     Boolean          @default(false) @map("is_sensitive")
   buildingId      String?          @map("building_id")
   building        Building?        @relation(fields: [buildingId], references: [id])
   roomId          String?          @map("room_id")
@@ -401,6 +406,7 @@ model PurchaseRequest {
   status            String                @default("PENDING_APPROVAL")
   estimatedTotal    Float?                @map("estimated_total")
   reason            String
+  attachmentUrl     String?               @map("attachment_url")
   lines             PurchaseRequestLine[]
   approvalDecisions ApprovalDecision[]
   stockReceipts     StockReceipt[]
@@ -512,4 +518,39 @@ model IdempotencyKey {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("idempotency_keys")
+}
+
+// -------------------------------------------------------------
+// 6. FACILITY & EVENT REQUESTS
+// -------------------------------------------------------------
+
+model FacilityRequest {
+  id                    String       @id
+  requesterId           String       @map("requester_id")
+  requester             User         @relation("FacilityRequester", fields: [requesterId], references: [id])
+  title                 String
+  description           String
+  buildingId            String?      @map("building_id")
+  roomId                String       @map("room_id")
+  room                  Room         @relation(fields: [roomId], references: [id])
+  eventDate             DateTime     @map("event_date")
+  startsAt              DateTime     @map("starts_at")
+  endsAt                DateTime     @map("ends_at")
+  expectedAttendance    Int          @map("expected_attendance")
+  category              String
+  equipmentRequirements String?      @map("equipment_requirements")
+  notes                 String?
+  attachmentUrl         String?      @map("attachment_url")
+  status                String       @default("PENDING_APPROVAL")
+  reviewerId            String?      @map("reviewer_id")
+  reviewer              User?        @relation("FacilityRequestReviewer", fields: [reviewerId], references: [id])
+  reviewNotes           String?      @map("review_notes")
+  reviewedAt            DateTime?    @map("reviewed_at")
+  bookingId             String?      @unique @map("booking_id")
+  booking               RoomBooking? @relation(fields: [bookingId], references: [id])
+  createdAt             DateTime     @default(now()) @map("created_at")
+
+  @@index([roomId, startsAt, endsAt])
+  @@index([requesterId, status])
+  @@map("facility_requests")
 }

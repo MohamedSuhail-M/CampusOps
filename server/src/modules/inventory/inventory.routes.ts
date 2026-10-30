@@ -14,10 +14,10 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * GET /api/inventory
+ * GET /api/inventory or /api/inventory/items
  * Returns inventory ledger with live computed availability and low stock alerts.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get(['/', '/items'], async (req: Request, res: Response) => {
   try {
     const items = await getInventoryLedger();
     res.json({ success: true, data: items });
