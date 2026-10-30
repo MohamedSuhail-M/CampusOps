@@ -20,13 +20,30 @@ const VALID_WO_TRANSITIONS: Record<string, string[]> = {
 
 // GET /api/work-orders
 router.get('/', async (req: Request, res: Response) => {
-  const { assignedTo, status, incidentId } = req.query;
+  const { assignedTo, status, incidentId, all } = req.query;
+  const user = req.user!;
 
   try {
     const where: any = {};
-    if (assignedTo && typeof assignedTo === 'string') where.assignedTo = assignedTo;
-    if (status && typeof status === 'string') where.status = status;
-    if (incidentId && typeof incidentId === 'string') where.incidentId = incidentId;
+
+    // Role-based scoping: If active role is TECHNICIAN and no explicit cross-query is requested,
+    // scope by default to work orders assigned to this technician.
+    if (user.activeRole === 'TECHNICIAN' && !all && assignedTo !== 'all') {
+      where.assignedTo = user.id;
+    } else if (assignedTo) {
+      if (assignedTo === 'unassigned' || assignedTo === 'UNASSIGNED') {
+        where.assignedTo = null;
+      } else if (assignedTo !== 'all') {
+        where.assignedTo = assignedTo as string;
+      }
+    }
+
+    if (status && typeof status === 'string' && status !== 'ALL') {
+      where.status = status;
+    }
+    if (incidentId && typeof incidentId === 'string') {
+      where.incidentId = incidentId;
+    }
 
     const workOrders = await prisma.workOrder.findMany({
       where,
@@ -38,12 +55,19 @@ router.get('/', async (req: Request, res: Response) => {
             title: true,
             priority: true,
             category: true,
-            building: { select: { code: true, name: true } },
-            room: { select: { id: true, code: true } },
+            status: true,
+            building: { select: { id: true, code: true, name: true } },
+            room: {
+              select: {
+                id: true,
+                code: true,
+                building: { select: { id: true, code: true, name: true } },
+              },
+            },
             asset: { select: { id: true, assetTag: true } },
           },
         },
-        assignee: { select: { id: true, name: true, loginId: true } },
+        assignee: { select: { id: true, name: true, loginId: true, email: true } },
         requiredSkill: { select: { id: true, name: true } },
         _count: {
           select: { events: true, stockReservations: true, purchaseRequests: true },
@@ -263,6 +287,64 @@ router.get('/:id/eligible-technicians', async (req: Request, res: Response) => {
   }
 });
 
+// Helper to find work order with ID normalization (supports WO001 and WO-001)
+async function findWorkOrderFlexible(id: string) {
+  let wo = await prisma.workOrder.findUnique({
+    where: { id },
+    include: {
+      incident: {
+        include: {
+          building: true,
+          room: { include: { building: true } },
+          asset: true,
+        },
+      },
+      assignee: true,
+      requiredSkill: true,
+      stockReservations: true,
+    },
+  });
+
+  if (!wo && id.includes('-')) {
+    wo = await prisma.workOrder.findUnique({
+      where: { id: id.replace('-', '') },
+      include: {
+        incident: {
+          include: {
+            building: true,
+            room: { include: { building: true } },
+            asset: true,
+          },
+        },
+        assignee: true,
+        requiredSkill: true,
+        stockReservations: true,
+      },
+    });
+  }
+
+  if (!wo && !id.includes('-') && id.startsWith('WO')) {
+    const withHyphen = `WO-${id.slice(2)}`;
+    wo = await prisma.workOrder.findUnique({
+      where: { id: withHyphen },
+      include: {
+        incident: {
+          include: {
+            building: true,
+            room: { include: { building: true } },
+            asset: true,
+          },
+        },
+        assignee: true,
+        requiredSkill: true,
+        stockReservations: true,
+      },
+    });
+  }
+
+  return wo;
+}
+
 // POST /api/work-orders/:id/assign
 router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEPARTMENT_MANAGER']), async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -278,21 +360,54 @@ router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEP
   }
 
   try {
-    const wo = await prisma.workOrder.findUnique({
-      where: { id },
-      include: { incident: true },
-    });
+    const wo = await findWorkOrderFlexible(id);
 
     if (!wo) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Work order '${id}' not found.` } });
       return;
     }
 
-    // Verify technician eligibility
+    if (['COMPLETED', 'CANCELLED'].includes(wo.status)) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_STATUS', message: `Cannot dispatch work order '${wo.id}' in terminal status '${wo.status}'.` },
+      });
+      return;
+    }
+
+    // Lookup technician by id or loginId
+    const techUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ id: technicianId }, { loginId: technicianId }],
+        status: 'ACTIVE',
+      },
+      include: {
+        userRoles: { include: { role: true } },
+      },
+    });
+
+    if (!techUser) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Technician '${technicianId}' not found or is inactive.` },
+      });
+      return;
+    }
+
+    const isTechnician = techUser.userRoles.some((ur) => ur.role.code === 'TECHNICIAN');
+    if (!isTechnician) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_ROLE', message: `User '${techUser.name}' does not have the TECHNICIAN role.` },
+      });
+      return;
+    }
+
+    // Verify technician eligibility (leave, shifts, skills)
     if (wo.requiredSkillId) {
       const targetDate = wo.dueAt ? new Date(wo.dueAt) : new Date();
       const { eligible, excluded } = await findEligibleTechnicians(wo.requiredSkillId, targetDate);
-      const isExcluded = excluded.find((c) => c.userId === technicianId);
+      const isExcluded = excluded.find((c) => c.userId === techUser.id);
 
       if (isExcluded) {
         res.status(400).json({
@@ -306,18 +421,23 @@ router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEP
       }
     }
 
-    const techUser = await prisma.user.findUnique({ where: { id: technicianId } });
-    if (!techUser) {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Technician user not found.' } });
-      return;
-    }
-
     const updated = await prisma.$transaction(async (tx) => {
       const updatedWo = await tx.workOrder.update({
-        where: { id },
+        where: { id: wo.id },
         data: {
-          assignedTo: technicianId,
+          assignedTo: techUser.id,
           status: 'ASSIGNED',
+        },
+        include: {
+          assignee: { select: { id: true, name: true, loginId: true, email: true } },
+          incident: {
+            include: {
+              building: true,
+              room: true,
+              asset: true,
+            },
+          },
+          requiredSkill: true,
         },
       });
 
@@ -329,9 +449,11 @@ router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEP
 
       // Log Work Order Event
       const woeCount = await tx.workOrderEvent.count();
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const timestamp = Date.now();
       await tx.workOrderEvent.create({
         data: {
-          id: `WOE${String(woeCount + 1).padStart(3, '0')}`,
+          id: `WOE-${timestamp}-${randomSuffix}`,
           workOrderId: wo.id,
           actorId: user.id,
           eventType: 'ASSIGNED',
@@ -341,16 +463,15 @@ router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEP
       });
 
       // Audit Log
-      const auditCount = await tx.auditLog.count();
       await tx.auditLog.create({
         data: {
-          id: `AUD${String(auditCount + 1).padStart(3, '0')}`,
+          id: `AUD-${timestamp}-${randomSuffix}`,
           actorId: user.id,
           action: 'ASSIGN',
           entityType: 'WORK_ORDER',
           entityId: wo.id,
           beforeJson: JSON.stringify({ assignedTo: wo.assignedTo, status: wo.status }),
-          afterJson: JSON.stringify({ assignedTo: technicianId, status: 'ASSIGNED' }),
+          afterJson: JSON.stringify({ assignedTo: techUser.id, status: 'ASSIGNED', assigneeName: techUser.name }),
           createdAt: new Date(),
         },
       });
@@ -360,12 +481,224 @@ router.post('/:id/assign', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'DEP
 
     res.json({
       success: true,
+      message: `Work order ${wo.id} successfully dispatched to ${techUser.name}.`,
       data: updated,
     });
   } catch (error: any) {
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to assign work order.', details: error.message },
+    });
+  }
+});
+
+// Helper function to execute work order transitions
+async function executeWorkOrderTransition({
+  wo,
+  action,
+  blockedReason,
+  resolution,
+  faultType,
+  user,
+}: {
+  wo: any;
+  action: string;
+  blockedReason?: string;
+  resolution?: string;
+  faultType?: string;
+  user: any;
+}) {
+  let nextStatus = '';
+  let eventType = '';
+  let details = '';
+
+  switch (action.toUpperCase()) {
+    case 'START':
+      if (!['ASSIGNED', 'OPEN'].includes(wo.status)) {
+        throw { code: 'INVALID_TRANSITION', message: `Cannot START work order in '${wo.status}' status.` };
+      }
+      nextStatus = 'IN_PROGRESS';
+      eventType = 'STARTED';
+      details = 'Technician started inspection and repair work.';
+      break;
+
+    case 'BLOCK':
+      if (!['IN_PROGRESS'].includes(wo.status)) {
+        throw { code: 'INVALID_TRANSITION', message: `Cannot BLOCK work order in '${wo.status}' status.` };
+      }
+      if (!blockedReason) {
+        throw { code: 'VALIDATION_ERROR', message: 'blockedReason string is required when blocking work order.' };
+      }
+      nextStatus = 'BLOCKED';
+      eventType = 'BLOCKED';
+      details = `Blocked: ${blockedReason}`;
+      break;
+
+    case 'RESUME':
+      if (!['BLOCKED'].includes(wo.status)) {
+        throw { code: 'INVALID_TRANSITION', message: `Cannot RESUME work order in '${wo.status}' status.` };
+      }
+      nextStatus = 'IN_PROGRESS';
+      eventType = 'RESUMED';
+      details = 'Work resumed after required spare parts or dependencies resolved.';
+      break;
+
+    case 'COMPLETE':
+      if (!['IN_PROGRESS', 'ASSIGNED'].includes(wo.status)) {
+        throw { code: 'INVALID_TRANSITION', message: `Cannot COMPLETE work order in '${wo.status}' status.` };
+      }
+      if (!resolution) {
+        throw { code: 'VALIDATION_ERROR', message: 'resolution string is required when completing work order.' };
+      }
+      nextStatus = 'COMPLETED';
+      eventType = 'COMPLETED';
+      details = `Work completed: ${resolution}`;
+      break;
+
+    default:
+      throw { code: 'INVALID_ACTION', message: `Unknown action '${action}'. Allowed: START, BLOCK, RESUME, COMPLETE.` };
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    // 1. Update Work Order
+    const updatedWo = await tx.workOrder.update({
+      where: { id: wo.id },
+      data: {
+        status: nextStatus,
+        blockedReason: action.toUpperCase() === 'BLOCK' ? blockedReason : null,
+      },
+      include: {
+        assignee: true,
+        incident: true,
+        requiredSkill: true,
+      },
+    });
+
+    // 2. Create Event Record
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const timestamp = Date.now();
+    await tx.workOrderEvent.create({
+      data: {
+        id: `WOE-${timestamp}-${randomSuffix}`,
+        workOrderId: wo.id,
+        actorId: user.id,
+        eventType,
+        details,
+        createdAt: new Date(),
+      },
+    });
+
+    // 3. Update Incident Status
+    if (nextStatus === 'IN_PROGRESS') {
+      await tx.incident.update({
+        where: { id: wo.incidentId },
+        data: { status: 'IN_PROGRESS' },
+      });
+    } else if (nextStatus === 'COMPLETED') {
+      await tx.incident.update({
+        where: { id: wo.incidentId },
+        data: { status: 'RESOLVED' },
+      });
+
+      // Record Maintenance History if asset is attached or on room
+      const targetAssetId =
+        wo.incident?.assetId ||
+        (await tx.asset.findFirst({ where: { roomId: wo.incident?.roomId || undefined } }))?.id ||
+        (await tx.asset.findFirst())?.id;
+
+      if (targetAssetId) {
+        await tx.maintenanceHistory.create({
+          data: {
+            id: `MNT-${timestamp}-${randomSuffix}`,
+            assetId: targetAssetId,
+            workOrderId: wo.id,
+            faultType: faultType || wo.incident?.category || 'ELECTRICAL',
+            resolution,
+            completedAt: new Date(),
+          },
+        });
+      }
+
+      // Clear any active room outages for this incident
+      await tx.roomOutage.updateMany({
+        where: { incidentId: wo.incidentId, status: 'ACTIVE' },
+        data: { status: 'RESOLVED', endsAt: new Date() },
+      });
+    }
+
+    // 4. Audit Log
+    await tx.auditLog.create({
+      data: {
+        id: `AUD-${timestamp}-${randomSuffix}`,
+        actorId: user.id,
+        action: `WORK_ORDER_${action.toUpperCase()}`,
+        entityType: 'WORK_ORDER',
+        entityId: wo.id,
+        beforeJson: JSON.stringify({ status: wo.status }),
+        afterJson: JSON.stringify({ status: nextStatus, details }),
+        createdAt: new Date(),
+      },
+    });
+
+    return updatedWo;
+  });
+}
+
+// POST /api/work-orders/:id/status (Direct status transition from UI modal)
+router.post('/:id/status', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status, blockedReason, resolutionNotes, resolution, faultType } = req.body;
+  const user = req.user!;
+
+  if (!status || typeof status !== 'string') {
+    res.status(400).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: "status is required ('IN_PROGRESS', 'BLOCKED', 'COMPLETED')." },
+    });
+    return;
+  }
+
+  try {
+    const wo = await findWorkOrderFlexible(id);
+    if (!wo) {
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Work order '${id}' not found.` } });
+      return;
+    }
+
+    // Map status string to transition action
+    let action = 'START';
+    const upperStatus = status.toUpperCase();
+    if (upperStatus === 'IN_PROGRESS') {
+      action = wo.status === 'BLOCKED' ? 'RESUME' : 'START';
+    } else if (upperStatus === 'BLOCKED') {
+      action = 'BLOCK';
+    } else if (upperStatus === 'COMPLETED') {
+      action = 'COMPLETE';
+    }
+
+    const resolvedText = resolution || resolutionNotes || 'Repair safely verified and completed.';
+    const result = await executeWorkOrderTransition({
+      wo,
+      action,
+      blockedReason,
+      resolution: resolvedText,
+      faultType,
+      user,
+    });
+
+    res.json({
+      success: true,
+      message: `Work order ${wo.id} transitioned to ${result.status}.`,
+      data: result,
+    });
+  } catch (error: any) {
+    if (error.code) {
+      res.status(400).json({ success: false, error });
+      return;
+    }
+    res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: error.message || 'Failed to update work order status.' },
     });
   }
 });
@@ -385,171 +718,19 @@ router.post('/:id/transition', async (req: Request, res: Response) => {
   }
 
   try {
-    const wo = await prisma.workOrder.findUnique({
-      where: { id },
-      include: {
-        incident: true,
-        stockReservations: true,
-      },
-    });
-
+    const wo = await findWorkOrderFlexible(id);
     if (!wo) {
       res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Work order '${id}' not found.` } });
       return;
     }
 
-    let nextStatus = '';
-    let eventType = '';
-    let details = '';
-
-    switch (action.toUpperCase()) {
-      case 'START':
-        if (!['ASSIGNED'].includes(wo.status)) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'INVALID_TRANSITION', message: `Cannot START work order in '${wo.status}' status.` },
-          });
-          return;
-        }
-        nextStatus = 'IN_PROGRESS';
-        eventType = 'STARTED';
-        details = 'Technician started inspection and repair work.';
-        break;
-
-      case 'BLOCK':
-        if (!['IN_PROGRESS'].includes(wo.status)) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'INVALID_TRANSITION', message: `Cannot BLOCK work order in '${wo.status}' status.` },
-          });
-          return;
-        }
-        if (!blockedReason) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'VALIDATION_ERROR', message: 'blockedReason string is required when blocking work order.' },
-          });
-          return;
-        }
-        nextStatus = 'BLOCKED';
-        eventType = 'BLOCKED';
-        details = `Blocked: ${blockedReason}`;
-        break;
-
-      case 'RESUME':
-        if (!['BLOCKED'].includes(wo.status)) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'INVALID_TRANSITION', message: `Cannot RESUME work order in '${wo.status}' status.` },
-          });
-          return;
-        }
-        nextStatus = 'IN_PROGRESS';
-        eventType = 'RESUMED';
-        details = 'Work resumed after required spare parts or dependencies resolved.';
-        break;
-
-      case 'COMPLETE':
-        if (!['IN_PROGRESS'].includes(wo.status)) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'INVALID_TRANSITION', message: `Cannot COMPLETE work order in '${wo.status}' status.` },
-          });
-          return;
-        }
-        if (!resolution) {
-          res.status(400).json({
-            success: false,
-            error: { code: 'VALIDATION_ERROR', message: 'resolution string is required when completing work order.' },
-          });
-          return;
-        }
-        nextStatus = 'COMPLETED';
-        eventType = 'COMPLETED';
-        details = `Work completed: ${resolution}`;
-        break;
-
-      default:
-        res.status(400).json({
-          success: false,
-          error: { code: 'INVALID_ACTION', message: `Unknown action '${action}'. Allowed: START, BLOCK, RESUME, COMPLETE.` },
-        });
-        return;
-    }
-
-    const result = await prisma.$transaction(async (tx) => {
-      // 1. Update Work Order
-      const updatedWo = await tx.workOrder.update({
-        where: { id },
-        data: {
-          status: nextStatus,
-          blockedReason: action.toUpperCase() === 'BLOCK' ? blockedReason : null,
-        },
-      });
-
-      // 2. Create Event Record
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const timestamp = Date.now();
-      await tx.workOrderEvent.create({
-        data: {
-          id: `WOE-${timestamp}-${randomSuffix}`,
-          workOrderId: wo.id,
-          actorId: user.id,
-          eventType,
-          details,
-          createdAt: new Date(),
-        },
-      });
-
-      // 3. Update Incident Status
-      if (nextStatus === 'IN_PROGRESS') {
-        await tx.incident.update({
-          where: { id: wo.incidentId },
-          data: { status: 'IN_PROGRESS' },
-        });
-      } else if (nextStatus === 'COMPLETED') {
-        await tx.incident.update({
-          where: { id: wo.incidentId },
-          data: { status: 'RESOLVED' },
-        });
-
-        // Record Maintenance History if asset is attached or on room
-        const targetAssetId = wo.incident.assetId || (await tx.asset.findFirst({ where: { roomId: wo.incident.roomId || undefined } }))?.id || (await tx.asset.findFirst())?.id;
-        if (targetAssetId) {
-          await tx.maintenanceHistory.create({
-            data: {
-              id: `MNT-${timestamp}-${randomSuffix}`,
-              assetId: targetAssetId,
-              workOrderId: wo.id,
-              faultType: faultType || wo.incident.category,
-              resolution,
-              completedAt: new Date(),
-            },
-          });
-        }
-
-        // Clear any active room outages for this incident
-        await tx.roomOutage.updateMany({
-          where: { incidentId: wo.incidentId, status: 'ACTIVE' },
-          data: { status: 'RESOLVED', endsAt: new Date() },
-        });
-      }
-
-      // 4. Audit Log
-      await tx.auditLog.create({
-        data: {
-          id: `AUD-${timestamp}-${randomSuffix}`,
-          actorId: user.id,
-          action: `WORK_ORDER_${action.toUpperCase()}`,
-          entityType: 'WORK_ORDER',
-          entityId: wo.id,
-          beforeJson: JSON.stringify({ status: wo.status }),
-          afterJson: JSON.stringify({ status: nextStatus, details }),
-          createdAt: new Date(),
-        },
-      });
-
-      return updatedWo;
+    const result = await executeWorkOrderTransition({
+      wo,
+      action,
+      blockedReason,
+      resolution,
+      faultType,
+      user,
     });
 
     res.json({
@@ -557,6 +738,10 @@ router.post('/:id/transition', async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
+    if (error.code) {
+      res.status(400).json({ success: false, error });
+      return;
+    }
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to transition work order.', details: error.message },

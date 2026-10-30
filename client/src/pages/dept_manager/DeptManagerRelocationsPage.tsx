@@ -96,7 +96,8 @@ export const DeptManagerRelocationsPage: React.FC = () => {
     fetchRelocations();
   }, []);
 
-  const activeItem = pendingList[0] || null;
+  const [selectedPendingIndex, setSelectedPendingIndex] = useState<number>(0);
+  const activeItem = pendingList[selectedPendingIndex] || pendingList[0] || null;
 
   const handleAuthorize = async () => {
     if (!activeItem) return;
@@ -105,19 +106,23 @@ export const DeptManagerRelocationsPage: React.FC = () => {
     setSuccessBanner(null);
 
     try {
-      const res = await apiFetch('/api/rooms/relocate', {
+      const res = await apiFetch<any>('/api/rooms/relocate', {
         method: 'POST',
         body: JSON.stringify({
           bookingId: activeItem.booking.id,
           newRoomId: selectedCandidate,
           decision: 'APPROVE',
           justification: reviewNote.trim() || 'Classroom relocation authorized by Department Manager',
+          ticketId: activeItem.outage?.incidentId,
         }),
       });
 
       if (res.success) {
+        const updatedTicketNotice = res.data?.updatedIncidents?.length
+          ? ` Associated maintenance ticket #${res.data.updatedIncidents[0].reference} updated to ${res.data.updatedIncidents[0].status}.`
+          : '';
         setSuccessBanner(
-          `Relocation Authorized: Session '${activeItem.booking.purpose}' transferred to ${res.data?.newRoomCode || selectedCandidate}. In-app pass dispatched to ${activeItem.booking.faculty?.name || 'Faculty'}.`
+          `Relocation Authorized: Session '${activeItem.booking.purpose}' transferred to ${res.data?.newRoomCode || selectedCandidate}.${updatedTicketNotice} In-app pass dispatched to ${activeItem.booking.faculty?.name || 'Faculty'}.`
         );
         setShowConfirmModal(false);
         fetchRelocations();
@@ -138,17 +143,20 @@ export const DeptManagerRelocationsPage: React.FC = () => {
     setSuccessBanner(null);
 
     try {
-      const res = await apiFetch('/api/rooms/relocate', {
+      const res = await apiFetch<any>('/api/rooms/relocate', {
         method: 'POST',
         body: JSON.stringify({
           bookingId: activeItem.booking.id,
           decision: 'REJECT',
           reviewNotes: reviewNote.trim() || 'Relocation rejected by Department Manager',
+          ticketId: activeItem.outage?.incidentId,
         }),
       });
 
       if (res.success) {
-        setSuccessBanner(`Relocation Request for '${activeItem.booking.purpose}' rejected. Original classroom booking retained.`);
+        setSuccessBanner(
+          `Relocation Request for '${activeItem.booking.purpose}' rejected. Original classroom booking retained and faculty advisory dispatched.`
+        );
         setShowRejectModal(false);
         fetchRelocations();
       } else {
@@ -231,6 +239,30 @@ export const DeptManagerRelocationsPage: React.FC = () => {
         </div>
       ) : activeItem ? (
         <div className="space-y-6">
+          {pendingList.length > 1 && (
+            <div className="flex gap-2 font-mono text-xs overflow-x-auto pb-1">
+              {pendingList.map((item, idx) => (
+                <button
+                  key={item.booking.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPendingIndex(idx);
+                    if (item.recommendations?.[0]) {
+                      setSelectedCandidate(item.recommendations[0].roomId);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold border transition-all ${
+                    selectedPendingIndex === idx
+                      ? 'bg-brandLime text-brandDark border-brandLime shadow-[2px_2px_0px_#0A0A0A]'
+                      : 'bg-[#1C1C1C] text-neutral-400 border-[#2A2A2A] hover:text-white'
+                  }`}
+                >
+                  Disruption #{idx + 1}: {item.booking.room?.code} ({item.booking.purpose})
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Disruption Context Card */}
           <div className="bg-[#181110] border-2 border-red-700/80 rounded-2xl p-6 shadow-[5px_5px_0px_#0A0A0A] space-y-4">
             <div className="flex items-center justify-between">

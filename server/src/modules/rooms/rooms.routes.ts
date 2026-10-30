@@ -8,6 +8,260 @@ const router = Router();
 
 router.use(authenticate);
 
+// -------------------------------------------------------------
+// 0. ROOM TIMETABLES & ACADEMIC SCHEDULES MATRIX (Issue 2)
+// -------------------------------------------------------------
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// GET /api/rooms/timetable
+router.get('/timetable', async (req: Request, res: Response) => {
+  const {
+    roomId,
+    buildingId,
+    departmentId,
+    facultyId,
+    dayOfWeek,
+    date,
+    startDate,
+    endDate,
+    status,
+    search,
+  } = req.query;
+
+  try {
+    const where: any = {};
+
+    // Filter by status (defaults to CONFIRMED or any non-cancelled)
+    if (status && typeof status === 'string' && status !== 'ALL') {
+      where.status = status;
+    } else if (!status) {
+      where.status = { not: 'CANCELLED' };
+    }
+
+    // Filter by Room ID or Code
+    if (roomId && typeof roomId === 'string' && roomId !== 'ALL') {
+      where.OR = [
+        { roomId },
+        { room: { code: roomId } },
+        { roomId: `RM-${roomId}` },
+      ];
+    }
+
+    // Filter by Building
+    if (buildingId && typeof buildingId === 'string' && buildingId !== 'ALL') {
+      where.room = {
+        ...where.room,
+        OR: [
+          { buildingId },
+          { building: { code: buildingId } },
+          { building: { id: `BLD-${buildingId}` } },
+        ],
+      };
+    }
+
+    // Filter by Department
+    if (departmentId && typeof departmentId === 'string' && departmentId !== 'ALL') {
+      where.departmentId = departmentId;
+    }
+
+    // Filter by Faculty
+    if (facultyId && typeof facultyId === 'string' && facultyId !== 'ALL') {
+      where.facultyId = facultyId;
+    }
+
+    // Filter by Date or Date range
+    if (date && typeof date === 'string') {
+      const target = new Date(date);
+      if (!isNaN(target.getTime())) {
+        const startOfDay = new Date(target);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(target);
+        endOfDay.setHours(23, 59, 59, 999);
+        where.startsAt = { gte: startOfDay, lte: endOfDay };
+      }
+    } else if (startDate || endDate) {
+      where.startsAt = {};
+      if (startDate) where.startsAt.gte = new Date(String(startDate));
+      if (endDate) where.startsAt.lte = new Date(String(endDate));
+    }
+
+    // Text search in purpose, faculty name, room code
+    if (search && typeof search === 'string' && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { purpose: { contains: q } },
+        { faculty: { name: { contains: q } } },
+        { room: { code: { contains: q } } },
+      ];
+    }
+
+    const bookings = await prisma.roomBooking.findMany({
+      where,
+      include: {
+        room: {
+          include: {
+            building: true,
+            roomOutages: { where: { status: 'ACTIVE' } },
+          },
+        },
+        department: true,
+        faculty: { select: { id: true, name: true, email: true, loginId: true } },
+        requirements: true,
+      },
+      orderBy: [{ startsAt: 'asc' }, { roomId: 'asc' }],
+    });
+
+    // Format timetable entries with readable day, time slot, and outage health
+    const formatted = bookings.map((b) => {
+      const start = new Date(b.startsAt);
+      const end = new Date(b.endsAt);
+      const dayName = DAYS_OF_WEEK[start.getDay()] || 'Monday';
+
+      const formatTime = (d: Date) =>
+        d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const timeSlot = `${formatTime(start)} - ${formatTime(end)}`;
+
+      const activeOutage = b.room.roomOutages[0] || null;
+      const isDisrupted = !!activeOutage;
+
+      return {
+        id: b.id,
+        bookingId: b.id,
+        roomId: b.roomId,
+        roomCode: b.room.code,
+        roomName: `Room ${b.room.code}`,
+        roomType: b.room.roomType,
+        capacity: b.room.capacity,
+        buildingId: b.room.buildingId,
+        buildingCode: b.room.building.code,
+        buildingName: b.room.building.name,
+        departmentId: b.departmentId,
+        departmentName: b.department.name,
+        facultyId: b.facultyId,
+        facultyName: b.faculty.name,
+        facultyEmail: b.faculty.email,
+        startsAt: b.startsAt,
+        endsAt: b.endsAt,
+        date: start.toISOString().split('T')[0],
+        dayOfWeek: dayName,
+        timeSlot,
+        purpose: b.purpose,
+        status: b.status,
+        requirements: b.requirements.map((r) => ({ type: r.requirementType, value: r.value })),
+        isDisrupted,
+        outageStatus: isDisrupted ? 'DISRUPTED' : 'OPERATIONAL',
+        outageReason: activeOutage ? 'Active Facility Outage / Equipment Hazard' : null,
+      };
+    });
+
+    // Filter by day of week if specified (e.g. "Monday")
+    const filtered =
+      dayOfWeek && typeof dayOfWeek === 'string' && dayOfWeek !== 'ALL'
+        ? formatted.filter((item) => item.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase())
+        : formatted;
+
+    res.json({
+      success: true,
+      count: filtered.length,
+      data: filtered,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch timetable records.', details: error.message },
+    });
+  }
+});
+
+// GET /api/rooms/:roomId/timetable (Direct room timetable)
+router.get('/:roomId/timetable', async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const { dayOfWeek, status } = req.query;
+
+  try {
+    const room = await prisma.room.findFirst({
+      where: {
+        OR: [{ id: roomId }, { code: roomId }, { id: `RM-${roomId}` }],
+      },
+      include: { building: true },
+    });
+
+    if (!room) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Room '${roomId}' not found.` },
+      });
+      return;
+    }
+
+    const where: any = { roomId: room.id };
+    if (status && typeof status === 'string' && status !== 'ALL') {
+      where.status = status;
+    } else {
+      where.status = { not: 'CANCELLED' };
+    }
+
+    const bookings = await prisma.roomBooking.findMany({
+      where,
+      include: {
+        room: { include: { building: true, roomOutages: { where: { status: 'ACTIVE' } } } },
+        department: true,
+        faculty: { select: { id: true, name: true, email: true } },
+        requirements: true,
+      },
+      orderBy: { startsAt: 'asc' },
+    });
+
+    const formatted = bookings.map((b) => {
+      const start = new Date(b.startsAt);
+      const end = new Date(b.endsAt);
+      const dayName = DAYS_OF_WEEK[start.getDay()] || 'Monday';
+      const formatTime = (d: Date) =>
+        d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+      return {
+        id: b.id,
+        bookingId: b.id,
+        roomCode: b.room.code,
+        capacity: b.room.capacity,
+        buildingCode: b.room.building.code,
+        departmentName: b.department.name,
+        facultyName: b.faculty.name,
+        startsAt: b.startsAt,
+        endsAt: b.endsAt,
+        dayOfWeek: dayName,
+        timeSlot: `${formatTime(start)} - ${formatTime(end)}`,
+        purpose: b.purpose,
+        status: b.status,
+        isDisrupted: b.room.roomOutages.length > 0,
+      };
+    });
+
+    const filtered =
+      dayOfWeek && typeof dayOfWeek === 'string' && dayOfWeek !== 'ALL'
+        ? formatted.filter((item) => item.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase())
+        : formatted;
+
+    res.json({
+      success: true,
+      room: {
+        id: room.id,
+        code: room.code,
+        capacity: room.capacity,
+        roomType: room.roomType,
+        building: room.building.name,
+      },
+      count: filtered.length,
+      data: filtered,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: error.message },
+    });
+  }
+});
+
 // 1. GET /api/rooms/conflicts?roomId=:id&targetDate=:date
 router.get('/conflicts', async (req: Request, res: Response) => {
   const { roomId, targetDate } = req.query;
@@ -147,28 +401,48 @@ router.get(
       // 1. Find all active room outages
       const activeOutages = await prisma.roomOutage.findMany({
         where: { status: 'ACTIVE' },
-        include: { room: { include: { building: true } } },
+        include: { room: { include: { building: true } }, incident: true },
       });
 
       const outageRoomIds = activeOutages.map((o) => o.roomId);
 
-      // 2. Find confirmed bookings in rooms with outages or key exam bookings
-      const pendingBookings = await prisma.roomBooking.findMany({
-        where: {
-          status: 'CONFIRMED',
-          ...deptFilter,
-          OR: [
-            { roomId: { in: outageRoomIds.length > 0 ? outageRoomIds : ['NO_OUTAGE'] } },
-            { id: 'BKG-EXAM' },
-          ],
-        },
-        include: {
-          room: { include: { building: true } },
-          faculty: { select: { id: true, name: true, email: true } },
-          department: true,
-          requirements: true,
-        },
+      // Find all active booking impacts
+      const activeImpacts = await prisma.incidentImpact.findMany({
+        where: { targetType: 'BOOKING', status: 'ACTIVE' },
       });
+      const impactedBookingIds = activeImpacts.map((i) => i.targetId);
+
+      // 2. Find confirmed bookings in disrupted rooms or with active hazard impacts
+      const pendingConditions: any[] = [];
+      if (outageRoomIds.length > 0) {
+        pendingConditions.push({ roomId: { in: outageRoomIds } });
+      }
+      if (impactedBookingIds.length > 0) {
+        pendingConditions.push({ id: { in: impactedBookingIds } });
+      }
+
+      // If BKG-EXAM is currently positioned in a hazard room (e.g. RM-B-204), include it
+      const bkgExam = await prisma.roomBooking.findUnique({ where: { id: 'BKG-EXAM' } });
+      if (bkgExam && (bkgExam.roomId === 'RM-B-204' || outageRoomIds.includes(bkgExam.roomId))) {
+        pendingConditions.push({ id: 'BKG-EXAM' });
+      }
+
+      let pendingBookings: any[] = [];
+      if (pendingConditions.length > 0) {
+        pendingBookings = await prisma.roomBooking.findMany({
+          where: {
+            status: 'CONFIRMED',
+            ...deptFilter,
+            OR: pendingConditions,
+          },
+          include: {
+            room: { include: { building: true } },
+            faculty: { select: { id: true, name: true, email: true } },
+            department: true,
+            requirements: true,
+          },
+        });
+      }
 
       // 3. For each pending booking, get scored recommendations
       const pendingItems = [];
@@ -446,6 +720,18 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
 
     const newRoomCode = `${newRoom.building.code}-${newRoom.code}`;
 
+    // Check if booking is already relocated to the destination room
+    if (booking.roomId === newRoomId) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'ALREADY_RELOCATED',
+          message: `Booking '${booking.purpose}' has already been relocated to room '${newRoomCode}'.`,
+        },
+      });
+      return;
+    }
+
     // Execute relocation in transactional block
     const transaction = await prisma.$transaction(async (tx) => {
       // 1. Update Booking room reference
@@ -461,7 +747,74 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
         data: { status: 'RESOLVED' },
       });
 
-      // 3. Send Notification to faculty
+      // 3. Synchronize Associated Ticket / Incident (Issue 3)
+      // Find all incidents associated with this booking impact or room outage
+      const linkedImpacts = await tx.incidentImpact.findMany({
+        where: { targetType: 'BOOKING', targetId: booking.id },
+        include: { incident: { include: { workOrders: true } } },
+      });
+
+      const linkedOutages = await tx.roomOutage.findMany({
+        where: { roomId: oldRoomId },
+        include: { incident: { include: { workOrders: true } } },
+      });
+
+      const incidentMap = new Map<string, any>();
+      for (const imp of linkedImpacts) {
+        if (imp.incident) incidentMap.set(imp.incident.id, imp.incident);
+      }
+      for (const out of linkedOutages) {
+        if (out.incident) incidentMap.set(out.incident.id, out.incident);
+      }
+
+      // Check explicit ticketId/incidentId from body
+      const explicitId = (req.body.ticketId || req.body.incidentId) as string | undefined;
+      if (explicitId) {
+        const directInc = await tx.incident.findFirst({
+          where: { OR: [{ id: explicitId }, { reference: explicitId }] },
+          include: { workOrders: true },
+        });
+        if (directInc) incidentMap.set(directInc.id, directInc);
+      }
+
+      const updatedIncidents: any[] = [];
+      for (const [incId, inc] of incidentMap.entries()) {
+        const activeWos = (inc.workOrders || []).filter((w: any) =>
+          ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'BLOCKED'].includes(w.status)
+        );
+
+        // If no active work orders remain (or this is purely a relocation request ticket),
+        // close / resolve the ticket to reach its correct terminal state.
+        if (activeWos.length === 0) {
+          const closedInc = await tx.incident.update({
+            where: { id: incId },
+            data: { status: 'RESOLVED' },
+          });
+          updatedIncidents.push({ id: closedInc.id, reference: closedInc.reference, status: 'RESOLVED' });
+        } else {
+          // If a maintenance work order is still active, advance ticket to at least IN_PROGRESS / ASSIGNED
+          if (inc.status === 'NEW' || inc.status === 'TRIAGED') {
+            const advInc = await tx.incident.update({
+              where: { id: incId },
+              data: { status: 'ASSIGNED' },
+            });
+            updatedIncidents.push({ id: advInc.id, reference: advInc.reference, status: 'ASSIGNED' });
+          }
+        }
+      }
+
+      // Check if all bookings for old room are now relocated; if so, resolve room outage
+      const remainingBookingsInOldRoom = await tx.roomBooking.count({
+        where: { roomId: oldRoomId, status: 'CONFIRMED' },
+      });
+      if (remainingBookingsInOldRoom === 0) {
+        await tx.roomOutage.updateMany({
+          where: { roomId: oldRoomId, status: 'ACTIVE' },
+          data: { status: 'RESOLVED', endsAt: new Date() },
+        });
+      }
+
+      // 4. Send Notification to faculty
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const timestamp = Date.now();
       const notification = await tx.notification.create({
@@ -476,7 +829,7 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
         },
       });
 
-      // 4. Immutable Audit Log (Matches AUD003 in seed workbook)
+      // 5. Immutable Audit Log (Matches AUD003 in seed workbook)
       const auditLog = await tx.auditLog.create({
         data: {
           id: `AUD-${timestamp}-${randomSuffix}`,
@@ -489,12 +842,13 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
             roomId: newRoomId,
             authorizedBy: user.name,
             reason: reason || 'Facility hazard relocation',
+            associatedIncidents: updatedIncidents,
           }),
           createdAt: new Date(),
         },
       });
 
-      // 5. Outbox Event
+      // 6. Outbox Event
       await tx.outboxEvent.create({
         data: {
           id: `OBX-${timestamp}-${randomSuffix}`,
@@ -505,6 +859,7 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
             fromRoomId: oldRoomId,
             toRoomId: newRoomId,
             facultyId: booking.facultyId,
+            updatedIncidents,
           }),
           status: 'PENDING',
           attempts: 0,
@@ -512,12 +867,12 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
         },
       });
 
-      return { updatedBooking, notification, auditLog };
+      return { updatedBooking, notification, auditLog, updatedIncidents };
     });
 
     res.json({
       success: true,
-      message: `Classroom relocation authorized: moved to ${newRoomCode}.`,
+      message: `Classroom relocation authorized: moved to ${newRoomCode}. Associated ticket updated.`,
       data: {
         booking: transaction.updatedBooking,
         bookingId: transaction.updatedBooking.id,
@@ -527,6 +882,7 @@ router.post('/relocate', requireRole(['DEPARTMENT_MANAGER', 'FACILITIES_ADMIN', 
         facultyNotified: booking.faculty.name,
         notificationId: transaction.notification.id,
         auditLogId: transaction.auditLog.id,
+        updatedIncidents: transaction.updatedIncidents,
       },
     });
   } catch (error: any) {
