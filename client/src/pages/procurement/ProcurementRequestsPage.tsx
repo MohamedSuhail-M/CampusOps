@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../services/api';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { ActionModal } from '../../components/common/ActionModal';
 
 export const ProcurementRequestsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedPr, setSelectedPr] = useState<any>(null);
@@ -55,19 +57,19 @@ export const ProcurementRequestsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'PROCUREMENT', path: '/app/procurement/requests' }, { label: 'PURCHASE REQUESTS' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.purchaseRequests, path: '/app/procurement/requests' }, { label: t.dashboards.procurement.title }]} />
 
       {/* Dual Control Banner */}
       <div className="bg-[#141414] border-2 border-brandDark shadow-[6px_6px_0px_#0A0A0A] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-brandLime/10 border border-brandLime/40 rounded-full text-brandLime font-mono text-[10px] font-bold uppercase tracking-wider">
-            POLICY 4.2 ENFORCED: DUAL-CONTROL ANTI-SELF-APPROVAL
+            {t.dashboards.procurement.dualSign}
           </div>
           <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase tracking-tight text-brandCream">
-            PURCHASE APPROVAL QUEUE
+            {t.dashboards.procurement.title}
           </h1>
           <p className="text-xs sm:text-sm font-sans text-neutral-300 max-w-xl">
-            Requesters are strictly barred from approving their own purchase orders. Financial thresholds and stock levels verified before signing.
+            {t.dashboards.procurement.subtitle}
           </p>
         </div>
       </div>
@@ -76,15 +78,15 @@ export const ProcurementRequestsPage: React.FC = () => {
       <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl overflow-hidden shadow-[4px_4px_0px_#0A0A0A] p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-[#2A2A2A] pb-3">
           <h2 className="font-display font-bold uppercase tracking-wider text-base text-brandCream">
-            Purchase Orders Queue
+            {t.dashboards.procurement.pendingRequests}
           </h2>
-          <span className="font-mono text-xs text-neutral-400">{requests.length} Orders</span>
+          <span className="font-mono text-xs text-neutral-400">{t.formatNumber(requests.length)} Orders</span>
         </div>
 
         {loading ? (
           <div className="py-16 text-center text-xs font-mono text-neutral-400">
             <div className="w-6 h-6 border-2 border-brandLime border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            Loading purchase requests...
+            {t.common.loading}
           </div>
         ) : (
           <div className="overflow-x-auto">

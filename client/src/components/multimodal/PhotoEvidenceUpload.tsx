@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { LiveCameraModal } from './LiveCameraModal';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 export interface UploadedEvidenceItem {
   id: string;
@@ -19,36 +21,20 @@ export const PhotoEvidenceUpload: React.FC<PhotoEvidenceUploadProps> = ({
   onChange,
   maxFiles = 3,
 }) => {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showCameraModal, setShowCameraModal] = useState<boolean>(false);
 
-  const handleFileSelect = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setErrorMsg(null);
+  const handlePhotoCaptured = async (blob: Blob, filename: string) => {
+    const file = new File([blob], filename, { type: 'image/jpeg' });
+    await uploadFiles([file]);
+  };
 
-    const availableSlots = maxFiles - evidenceList.length;
-    if (availableSlots <= 0) {
-      setErrorMsg(`Maximum of ${maxFiles} photos allowed per complaint.`);
-      return;
-    }
-
-    const filesToUpload: File[] = [];
-    for (let i = 0; i < Math.min(files.length, availableSlots); i++) {
-      const file = files[i];
-      // Validate file size (5MB = 5 * 1024 * 1024 bytes)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMsg(`File "${file.name}" exceeds the 5MB size limit.`);
-        return;
-      }
-      // Validate MIME type
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        setErrorMsg(`File "${file.name}" must be JPEG, PNG, or WebP.`);
-        return;
-      }
-      filesToUpload.push(file);
-    }
-
+  const uploadFiles = async (filesToUpload: File[]) => {
+    if (filesToUpload.length === 0) return;
     setUploading(true);
+    setErrorMsg(null);
 
     try {
       const formData = new FormData();
@@ -81,6 +67,35 @@ export const PhotoEvidenceUpload: React.FC<PhotoEvidenceUploadProps> = ({
     }
   };
 
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setErrorMsg(null);
+
+    const availableSlots = maxFiles - evidenceList.length;
+    if (availableSlots <= 0) {
+      setErrorMsg(`Maximum of ${maxFiles} photos allowed per complaint.`);
+      return;
+    }
+
+    const filesToUpload: File[] = [];
+    for (let i = 0; i < Math.min(files.length, availableSlots); i++) {
+      const file = files[i];
+      // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg(`File "${file.name}" exceeds the 5MB size limit.`);
+        return;
+      }
+      // Validate MIME type
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        setErrorMsg(`File "${file.name}" must be JPEG, PNG, or WebP.`);
+        return;
+      }
+      filesToUpload.push(file);
+    }
+
+    await uploadFiles(filesToUpload);
+  };
+
   const handleRemove = (id: string) => {
     onChange(evidenceList.filter((item) => item.id !== id));
   };
@@ -110,27 +125,31 @@ export const PhotoEvidenceUpload: React.FC<PhotoEvidenceUploadProps> = ({
           />
         </label>
 
-        {/* Camera Capture on Mobile / Laptop */}
-        <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-[#2A2A2A] hover:border-brandLime bg-[#161616] hover:bg-[#1C1C1C] cursor-pointer transition-all text-center group">
+        {/* Real Live In-Browser Camera Capture Modal */}
+        <button
+          type="button"
+          disabled={uploading || evidenceList.length >= maxFiles}
+          onClick={() => setShowCameraModal(true)}
+          className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-[#2A2A2A] hover:border-brandLime bg-[#161616] hover:bg-[#1C1C1C] cursor-pointer transition-all text-center group disabled:opacity-50"
+        >
           <span className="material-symbols-outlined text-2xl text-neutral-400 group-hover:text-brandLime mb-1">
             photo_camera
           </span>
           <span className="text-xs font-mono font-bold text-brandCream uppercase">
-            Take Live Photo
+            {t.complaintForm?.cameraCapture || 'Open Live Camera'}
           </span>
           <span className="text-[10px] font-mono text-neutral-500 mt-0.5">
-            Opens Device Camera Directly
+            Real In-Browser Viewfinder &amp; Capture
           </span>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            disabled={uploading || evidenceList.length >= maxFiles}
-            onChange={(e) => handleFileSelect(e.target.files)}
-            className="hidden"
-          />
-        </label>
+        </button>
       </div>
+
+      {/* Live Camera Modal */}
+      <LiveCameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onPhotoCaptured={handlePhotoCaptured}
+      />
 
       {uploading && (
         <div className="flex items-center gap-2 font-mono text-xs text-brandLime bg-brandLime/10 border border-brandLime/30 p-2.5 rounded-lg">

@@ -1,22 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 import { MetricCard } from '../../components/common/MetricCard';
 
 export const DeptManagerHomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'DEPARTMENT MANAGER', path: '/app/dept-manager/home' }, { label: 'OVERVIEW' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.dashboard, path: '/app/dept-manager/home' }, { label: t.dashboards.deptManager.title }]} />
 
       {/* Critical Exam Disruption Alert for Room B-204 */}
       <div className="bg-[#1C1210] border-2 border-red-700/80 rounded-2xl p-6 shadow-[5px_5px_0px_#0A0A0A] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-950 border border-red-700/60 rounded-full text-red-300 font-mono text-[10px] font-bold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-            CRITICAL DISRUPTION: SEMESTER EXAMINATION
+            {t.dashboards.deptManager.urgentAction}
           </div>
           <h2 className="text-xl sm:text-2xl font-display font-bold uppercase tracking-tight text-brandCream">
             Room B-204 Electrical Failure
@@ -30,7 +30,7 @@ export const DeptManagerHomePage: React.FC = () => {
           to="/app/dept-manager/relocations"
           className="px-6 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all whitespace-nowrap self-start md:self-auto"
         >
-          Authorize Relocation →
+          {t.dashboards.deptManager.approveRelocationBtn} →
         </Link>
       </div>
 
@@ -39,13 +39,13 @@ export const DeptManagerHomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brandLime/10 border border-brandLime/40 rounded-full text-brandLime font-mono text-[10px] font-bold uppercase tracking-widest">
-              COMPUTER SCIENCE & ENGINEERING
+              {t.dashboards.deptManager.title}
             </div>
             <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase tracking-tight text-brandCream">
-              YOUR DEPARTMENT. ON TRACK.
+              {t.dashboards.deptManager.title}
             </h1>
             <p className="text-xs sm:text-sm font-sans text-neutral-300 max-w-xl">
-              Signed in as <strong className="text-brandLime">{user?.name}</strong> (Department Manager). Manage academic room allocations, resolve exam emergencies, and track lab maintenance.
+              {t.dashboards.deptManager.subtitle}
             </p>
           </div>
 
@@ -54,13 +54,13 @@ export const DeptManagerHomePage: React.FC = () => {
               to="/app/dept-manager/relocations"
               className="px-5 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28]"
             >
-              Relocation Console
+              {t.nav.relocations}
             </Link>
             <Link
               to="/app/dept-manager/rooms"
               className="px-5 py-3 bg-[#2A2A2A] text-brandCream font-mono font-bold text-xs uppercase tracking-wider rounded-xl border border-[#3A3A3A] hover:bg-[#333]"
             >
-              CSE Classrooms
+              {t.nav.rooms}
             </Link>
           </div>
         </div>
@@ -68,9 +68,9 @@ export const DeptManagerHomePage: React.FC = () => {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard label="Department Rooms" value={18} icon="meeting_room" metaText="Building B & C" />
-        <MetricCard label="Active Incidents" value={2} icon="report" badgeText="1 Critical Exam" badgeColor="red" />
-        <MetricCard label="Relocation Approvals" value={1} icon="swap_horiz" badgeText="Ready to Sign" badgeColor="lime" />
+        <MetricCard label={t.dashboards.deptManager.conflictMatrix} value={18} icon="meeting_room" metaText="Building B & C" />
+        <MetricCard label={t.dashboards.deptManager.relocationsNeeded} value={2} icon="report" badgeText="1 Critical Exam" badgeColor="red" />
+        <MetricCard label={t.dashboards.deptManager.authorizedRelocations} value={1} icon="swap_horiz" badgeText="Ready to Sign" badgeColor="lime" />
       </div>
 
       {/* Quick Nav Cards */}

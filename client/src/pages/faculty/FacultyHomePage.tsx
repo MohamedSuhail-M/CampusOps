@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { MetricCard } from '../../components/common/MetricCard';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 
 export const FacultyHomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { t } = useTranslation();
   const [hasDisruption, setHasDisruption] = useState<boolean>(true);
 
   // Timetable demo schedule
@@ -17,7 +17,7 @@ export const FacultyHomePage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'FACULTY', path: '/app/faculty/home' }, { label: 'OVERVIEW' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.dashboard, path: '/app/faculty/home' }, { label: t.dashboards.faculty.title }]} />
 
       {/* Disruption Warning Banner for RM-B-204 */}
       {hasDisruption && (
@@ -27,12 +27,12 @@ export const FacultyHomePage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="bg-red-600 text-white font-mono font-bold text-[10px] px-2 py-0.5 rounded">
-                  CRITICAL DISRUPTION
+                  {t.common.critical}
                 </span>
                 <span className="font-mono text-xs text-red-300 font-bold">ROOM B-204</span>
               </div>
               <p className="text-sm font-bold text-brandCream mt-1">
-                Electrical Socket Sparking & Main Breaker Trip Reported
+                {t.dashboards.faculty.alertDisruption}
               </p>
               <p className="text-xs font-mono text-neutral-400 mt-0.5">
                 CSAI Semester Exam conflict detected. Relocation candidate: RM-B-206.
@@ -45,14 +45,14 @@ export const FacultyHomePage: React.FC = () => {
               to="/app/faculty/rooms"
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-xs uppercase rounded-lg shadow-[2px_2px_0px_#0A0A0A]"
             >
-              View Relocation Pass
+              {t.dashboards.faculty.roomPasses}
             </Link>
             <button
               type="button"
               onClick={() => setHasDisruption(false)}
               className="px-3 py-2 bg-[#2A2A2A] hover:bg-[#333] text-neutral-300 font-mono text-xs uppercase rounded-lg"
             >
-              Dismiss
+              {t.common.close}
             </button>
           </div>
         </div>
@@ -63,13 +63,13 @@ export const FacultyHomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brandLime/10 border border-brandLime/40 rounded-full text-brandLime font-mono text-[10px] font-bold uppercase tracking-widest">
-              FACULTY ACADEMIC OPERATIONS
+              {t.dashboards.faculty.title}
             </div>
             <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase tracking-tight text-brandCream">
-              FOCUS ON TEACHING.
+              {t.dashboards.faculty.title}
             </h1>
             <p className="text-xs sm:text-sm font-sans text-neutral-300 max-w-xl">
-              Hello, <strong className="text-brandLime">{user?.name}</strong>. Monitor lecture hall equipment, submit rapid maintenance tickets, and track emergency classroom relocations.
+              {t.dashboards.faculty.subtitle}
             </p>
           </div>
 
@@ -79,13 +79,13 @@ export const FacultyHomePage: React.FC = () => {
               className="px-6 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-base">report_problem</span>
-              Report Classroom Issue
+              {t.dashboards.faculty.reportHazardBtn}
             </Link>
             <Link
               to="/app/faculty/timetable"
               className="px-5 py-3 bg-[#2A2A2A] text-brandCream font-mono font-bold text-xs uppercase tracking-wider rounded-xl border border-[#3A3A3A] hover:bg-[#353535] transition-all"
             >
-              My Timetable (3 Classes)
+              {t.dashboards.faculty.mySchedule}
             </Link>
           </div>
         </div>
@@ -93,9 +93,9 @@ export const FacultyHomePage: React.FC = () => {
 
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard label="Today's Sessions" value={3} icon="calendar_today" />
-        <MetricCard label="Room Status" value="1 Disrupted" icon="room_preferences" badgeText="Action Required" badgeColor="red" />
-        <MetricCard label="Pending Relocations" value={1} icon="swap_horiz" badgeText="RM-B-206 Candidate" badgeColor="lime" />
+        <MetricCard label={t.dashboards.faculty.todayClasses} value={3} icon="calendar_today" />
+        <MetricCard label={t.dashboards.faculty.timetableStatus} value="1 Disrupted" icon="room_preferences" badgeText={t.common.critical} badgeColor="red" />
+        <MetricCard label={t.dashboards.faculty.roomPasses} value={1} icon="swap_horiz" badgeText="RM-B-206" badgeColor="lime" />
       </div>
 
       {/* Today's Schedule Overview */}

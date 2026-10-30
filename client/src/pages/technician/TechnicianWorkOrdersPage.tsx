@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../../services/api';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { MetricCard } from '../../components/common/MetricCard';
 import { ActionModal } from '../../components/common/ActionModal';
 
 export const TechnicianWorkOrdersPage: React.FC = () => {
+  const { t } = useTranslation();
   const [workOrders, setWorkOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -66,15 +68,15 @@ export const TechnicianWorkOrdersPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'TECHNICIAN', path: '/app/technician/work-orders' }, { label: 'WORK ORDERS' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.workOrders, path: '/app/technician/work-orders' }, { label: t.dashboards.technician.title }]} />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#2A2A2A] pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold uppercase tracking-tight text-brandCream">
-            Assigned Work Orders
+            {t.dashboards.technician.title}
           </h1>
           <p className="text-xs sm:text-sm font-sans text-neutral-400 mt-1">
-            Execute maintenance lifecycle: START → BLOCK → RESUME → COMPLETE with spare reservations.
+            {t.dashboards.technician.subtitle}
           </p>
         </div>
 
@@ -83,15 +85,15 @@ export const TechnicianWorkOrdersPage: React.FC = () => {
           className="px-4 py-2 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-xl shadow-[3px_3px_0px_#0A0A0A] flex items-center gap-1.5 self-start sm:self-auto"
         >
           <span className="material-symbols-outlined text-base">inventory_2</span>
-          Request Spares (PR)
+          {t.dashboards.technician.requestSpares}
         </Link>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard label="Active Work Orders" value={activeCount} icon="construction" badgeText="In Queue" badgeColor="lime" />
-        <MetricCard label="Blocked on Spares" value={blockedCount} icon="block" badgeText="Needs Parts" badgeColor="red" />
-        <MetricCard label="Completed Repairs" value={completedCount} icon="task_alt" badgeText="Verified" />
+        <MetricCard label={t.dashboards.technician.assignedOrders} value={t.formatNumber(activeCount)} icon="construction" badgeText="In Queue" badgeColor="lime" />
+        <MetricCard label={t.dashboards.technician.pendingParts} value={t.formatNumber(blockedCount)} icon="block" badgeText="Needs Parts" badgeColor="red" />
+        <MetricCard label={t.dashboards.technician.completedToday} value={t.formatNumber(completedCount)} icon="task_alt" badgeText={t.common.verified} />
       </div>
 
       {/* Filter Tabs */}
@@ -107,7 +109,7 @@ export const TechnicianWorkOrdersPage: React.FC = () => {
                 : 'bg-[#1C1C1C] text-neutral-400 border-[#2A2A2A] hover:text-brandCream'
             }`}
           >
-            {st.replace('_', ' ')}
+            {st === 'ALL' ? t.reportsList.allFilter : (t.status as any)[st.toLowerCase()] || st}
           </button>
         ))}
       </div>

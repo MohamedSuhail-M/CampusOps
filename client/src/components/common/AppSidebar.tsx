@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { CampusOpsLogo } from './CampusOpsLogo';
 
 export interface NavItem {
@@ -28,6 +29,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onCloseMobile,
 }) => {
   const { user, activeRole, logout } = useAuth();
+  const { t } = useTranslation();
 
   const getInitials = (name?: string) => {
     if (!name) return 'CO';
@@ -157,7 +159,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           <button
             type="button"
             onClick={logout}
-            title="Lock Session / Sign Out"
+            title={t.nav.logout}
             className="p-1.5 text-neutral-400 hover:text-[#FF5555] transition-colors"
           >
             <span className="material-symbols-outlined text-lg">power_settings_new</span>

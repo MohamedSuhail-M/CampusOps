@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { apiFetch } from '../../services/api';
 import { LanguageSelector } from './LanguageSelector';
 
@@ -24,6 +26,8 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
   onSearchChange,
 }) => {
   const { user, activeRole, switchActiveRole, logout } = useAuth();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -101,7 +105,7 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
             type="text"
             value={searchValue}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            placeholder="Search tickets, rooms, assets..."
+            placeholder={t.topbar?.searchPlaceholder || 'Search tickets, rooms, assets...'}
             className="w-full bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg pl-9 pr-8 py-1.5 text-xs text-brandCream placeholder:text-neutral-500 focus:outline-none focus:border-brandLime transition-all"
           />
           <kbd className="hidden md:inline absolute right-2.5 px-1.5 py-0.5 rounded bg-[#2A2A2A] border border-[#353534] font-mono text-[9px] text-neutral-400">
@@ -115,10 +119,16 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
         {/* Quick Role Switcher Dropdown */}
         {user && user.roles && user.roles.length > 1 && (
           <div className="relative hidden md:flex items-center gap-1.5 bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg px-2.5 py-1 text-xs">
-            <span className="font-mono text-[9px] text-on-surface-variant uppercase font-bold">ROLE:</span>
+            <span className="font-mono text-[9px] text-on-surface-variant uppercase font-bold">{t.topbar?.activeRoleLabel || 'ROLE'}:</span>
             <select
               value={activeRole || ''}
-              onChange={(e) => switchActiveRole(e.target.value)}
+              onChange={async (e) => {
+                const targetRole = e.target.value;
+                const ok = await switchActiveRole(targetRole);
+                if (ok) {
+                  navigate('/app');
+                }
+              }}
               className="bg-transparent text-brandLime font-mono font-bold text-xs focus:outline-none cursor-pointer"
             >
               {user.roles.map((r) => (
@@ -139,7 +149,7 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
             type="button"
             onClick={() => setShowNotifs(!showNotifs)}
             className="relative p-2 rounded-lg bg-[#1C1C1C] border border-[#2A2A2A] text-on-surface-variant hover:text-brandCream hover:border-brandLime transition-colors"
-            title="Notifications"
+            title={t.nav.alerts}
           >
             <span className="material-symbols-outlined text-lg">notifications</span>
             {unreadCount > 0 && (
@@ -153,11 +163,11 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
               <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#2A2A2A]">
                 <div className="flex items-center gap-2">
                   <span className="font-display text-sm uppercase font-bold text-brandCream">
-                    Notifications
+                    {t.alertsPage.title}
                   </span>
                   {unreadCount > 0 && (
                     <span className="bg-brandLime text-brandDark font-mono font-bold text-[10px] px-1.5 py-0.5 rounded">
-                      {unreadCount} NEW
+                      {unreadCount} {t('common.new', 'NEW')}
                     </span>
                   )}
                 </div>
@@ -167,7 +177,7 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
                     onClick={markAllRead}
                     className="text-[11px] font-mono text-brandLime hover:underline"
                   >
-                    Mark All Read
+                    {t.alertsPage.markAllRead}
                   </button>
                 )}
               </div>
@@ -175,7 +185,7 @@ export const AppTopbar: React.FC<AppTopbarProps> = ({
               <div className="max-h-72 overflow-y-auto space-y-2">
                 {notifications.length === 0 ? (
                   <div className="text-center py-6 text-xs text-neutral-500 font-mono">
-                    No current notifications.
+                    {t.alertsPage.emptySubtitle}
                   </div>
                 ) : (
                   notifications.map((n) => (

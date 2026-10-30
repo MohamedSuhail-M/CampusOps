@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { apiFetch } from '../../services/api';
 import { MetricCard } from '../../components/common/MetricCard';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 
 export const StudentHomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { t } = useTranslation();
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -29,7 +29,7 @@ export const StudentHomePage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'STUDENT', path: '/app/student/home' }, { label: 'DASHBOARD' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.dashboard, path: '/app/student/home' }, { label: t.dashboards.student.title }]} />
 
       {/* Hero Welcome Banner */}
       <div className="relative rounded-2xl overflow-hidden border-2 border-brandDark shadow-[6px_6px_0px_#0A0A0A] bg-gradient-to-r from-[#141414] via-[#1A1A1A] to-[#121212] p-6 sm:p-8">
@@ -37,13 +37,13 @@ export const StudentHomePage: React.FC = () => {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-brandLime/10 border border-brandLime/40 rounded-full text-brandLime font-mono text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-brandLime animate-pulse" />
-              STUDENT DISPATCH PORTAL
+              {t.dashboards.student.title}
             </div>
             <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase tracking-tight text-brandCream">
-              YOUR CAMPUS. YOUR VOICE.
+              {t.dashboards.student.title}
             </h1>
             <p className="text-xs sm:text-sm font-sans text-neutral-300 max-w-xl">
-              Welcome back, <strong className="text-brandLime">{user?.name}</strong>. Report campus infrastructure issues, track equipment repairs, and receive live status updates.
+              {t.dashboards.student.subtitle}
             </p>
           </div>
 
@@ -53,13 +53,13 @@ export const StudentHomePage: React.FC = () => {
               className="px-6 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-[4px_4px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-base">add_circle</span>
-              Submit New Complaint
+              {t.dashboards.student.reportNewIssueBtn}
             </Link>
             <Link
               to="/app/student/reports"
               className="px-5 py-3 bg-[#2A2A2A] text-brandCream font-mono font-bold text-xs uppercase tracking-wider rounded-xl border border-[#3A3A3A] hover:bg-[#353535] transition-all"
             >
-              View My Reports ({totalComplaints})
+              {t.nav.myReports} ({t.formatNumber(totalComplaints)})
             </Link>
           </div>
         </div>
@@ -68,24 +68,24 @@ export const StudentHomePage: React.FC = () => {
       {/* KPI Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
-          label="Total Submitted"
-          value={totalComplaints}
+          label={t.dashboards.student.recentReports}
+          value={t.formatNumber(totalComplaints)}
           icon="assignment"
-          metaText="Logged in SQLite audit trail"
+          metaText="SQLite audit trail"
         />
         <MetricCard
-          label="Active & In Progress"
-          value={inProgress}
+          label={t.dashboards.student.activeIncidents}
+          value={t.formatNumber(inProgress)}
           icon="pending_actions"
-          badgeText="Active SLA"
+          badgeText="Active"
           badgeColor="lime"
           progressPercent={totalComplaints > 0 ? (inProgress / totalComplaints) * 100 : 0}
         />
         <MetricCard
-          label="Resolved Tickets"
-          value={resolved}
+          label={t.dashboards.student.resolvedMonth}
+          value={t.formatNumber(resolved)}
           icon="task_alt"
-          badgeText="Verified"
+          badgeText={t.common.verified}
           progressPercent={totalComplaints > 0 ? (resolved / totalComplaints) * 100 : 0}
         />
       </div>
@@ -98,32 +98,32 @@ export const StudentHomePage: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-brandLime" />
               <h2 className="font-display font-bold uppercase tracking-wider text-base text-brandCream">
-                Recent Complaints
+                {t.dashboards.student.recentReports}
               </h2>
             </div>
             <Link
               to="/app/student/reports"
               className="text-xs font-mono font-bold text-brandLime hover:underline uppercase"
             >
-              View All ({totalComplaints}) →
+              {t.dashboards.student.viewAllReports}
             </Link>
           </div>
 
           {loading ? (
             <div className="py-8 text-center text-xs font-mono text-neutral-400">
-              Loading recent complaints...
+              {t.common.loading}
             </div>
           ) : complaints.length === 0 ? (
             <div className="py-8 text-center space-y-3">
               <span className="material-symbols-outlined text-4xl text-neutral-600">inbox</span>
               <p className="text-xs font-mono text-neutral-400">
-                You haven&apos;t submitted any complaints yet.
+                {t.dashboards.student.emptyReports}
               </p>
               <Link
                 to="/app/student/report"
                 className="inline-block px-4 py-2 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-lg"
               >
-                Report an Issue
+                {t.dashboards.student.reportNewIssueBtn}
               </Link>
             </div>
           ) : (

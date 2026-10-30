@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../services/api';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { MetricCard } from '../../components/common/MetricCard';
 import { ActionModal } from '../../components/common/ActionModal';
 
 export const FacilitiesTriagePage: React.FC = () => {
+  const { t } = useTranslation();
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -69,20 +71,20 @@ export const FacilitiesTriagePage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'FACILITIES ADMIN', path: '/app/facilities/triage' }, { label: 'INCIDENT TRIAGE' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.incidentTriage, path: '/app/facilities/triage' }, { label: t.dashboards.facilities.title }]} />
 
       {/* DEFCON Posture Header */}
       <div className="bg-[#141414] border-2 border-brandDark shadow-[6px_6px_0px_#0A0A0A] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-950/80 border border-yellow-600/80 rounded-full text-yellow-300 font-mono text-[10px] font-bold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-            OPERATIONAL POSTURE: DEFCON 4 (ELEVATED SLA)
+            {t.dashboards.facilities.autoCorrelate}
           </div>
           <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase tracking-tight text-brandCream">
-            CAMPUS OPERATIONS DESK
+            {t.dashboards.facilities.title}
           </h1>
           <p className="text-xs sm:text-sm font-sans text-neutral-300 max-w-xl">
-            Live incident intake triage, technician eligibility validation, and automated leave lockout enforcement.
+            {t.dashboards.facilities.subtitle}
           </p>
         </div>
 
@@ -96,16 +98,16 @@ export const FacilitiesTriagePage: React.FC = () => {
             className="px-5 py-3 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28] transition-all flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-base">person_add</span>
-            Dispatch Technician
+            {t.dashboards.facilities.dispatchWorkOrder}
           </button>
         </div>
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard label="Active Incidents" value={incidents.length} icon="crisis_alert" badgeText="Real-time" badgeColor="lime" />
-        <MetricCard label="Eligible Technicians" value="4 Active" icon="engineering" metaText="1 On Approved Leave" />
-        <MetricCard label="SLA Compliance" value="98.2%" icon="verified" badgeText="Normal" />
+        <MetricCard label={t.dashboards.facilities.triageQueue} value={t.formatNumber(incidents.length)} icon="crisis_alert" badgeText="Real-time" badgeColor="lime" />
+        <MetricCard label={t.dashboards.facilities.availableTechs} value="4 Active" icon="engineering" metaText="1 On Approved Leave" />
+        <MetricCard label={t.dashboards.facilities.openWorkOrders} value="98.2%" icon="verified" badgeText={t.common.verified} />
       </div>
 
       {/* Incidents Table */}
@@ -114,10 +116,10 @@ export const FacilitiesTriagePage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-brandLime" />
             <h2 className="font-display font-bold uppercase tracking-wider text-base text-brandCream">
-              Active Triage Queue
+              {t.dashboards.facilities.triageQueue}
             </h2>
           </div>
-          <span className="font-mono text-xs text-neutral-400">{incidents.length} Active Records</span>
+          <span className="font-mono text-xs text-neutral-400">{t.formatNumber(incidents.length)} Records</span>
         </div>
 
         {loading ? (

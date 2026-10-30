@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { Breadcrumbs } from '../../components/common/Breadcrumbs';
 import { MetricCard } from '../../components/common/MetricCard';
 import { ActionModal } from '../../components/common/ActionModal';
 
 export const SysAdminOverviewPage: React.FC = () => {
+  const { t } = useTranslation();
   const stats = {
     activeSessions: 7,
     dbRecords: 1042,
@@ -19,15 +21,15 @@ export const SysAdminOverviewPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: 'SYSTEM ADMIN', path: '/app/sysadmin/overview' }, { label: 'SYSTEM OVERVIEW' }]} />
+      <Breadcrumbs items={[{ label: 'CAMPUSOPS', path: '/' }, { label: t.nav.systemOverview, path: '/app/sysadmin/overview' }, { label: t.dashboards.sysadmin.title }]} />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#2A2A2A] pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-display font-bold uppercase tracking-tight text-brandCream">
-            Infrastructure &amp; Security Console
+            {t.dashboards.sysadmin.title}
           </h1>
           <p className="text-xs sm:text-sm font-sans text-neutral-400 mt-1">
-            Local-first SQLite database health, role permissions, and tamper-evident audit ledger.
+            {t.dashboards.sysadmin.subtitle}
           </p>
         </div>
 
@@ -40,15 +42,15 @@ export const SysAdminOverviewPage: React.FC = () => {
           className="px-4 py-2 bg-brandLime text-brandDark font-mono font-bold text-xs uppercase rounded-xl shadow-[3px_3px_0px_#0A0A0A] flex items-center gap-1.5 self-start sm:self-auto"
         >
           <span className="material-symbols-outlined text-base">terminal</span>
-          Run System Diagnostics
+          {t.dashboards.sysadmin.runDiagnostics}
         </button>
       </div>
 
       {/* Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <MetricCard label="Active Sessions" value={stats.activeSessions} icon="badge" badgeText="Cookie-based" badgeColor="lime" />
-        <MetricCard label="Database Records" value={stats.dbRecords} icon="storage" metaText="34 Prisma models" />
-        <MetricCard label="Database Health" value="OPTIMAL" icon="check_circle" metaText="0 FK violations" badgeColor="lime" />
+        <MetricCard label={t.dashboards.sysadmin.activeSessions} value={t.formatNumber(stats.activeSessions)} icon="badge" badgeText="Cookie-based" badgeColor="lime" />
+        <MetricCard label={t.dashboards.sysadmin.dbRecords} value={t.formatNumber(stats.dbRecords)} icon="storage" metaText="34 Prisma models" />
+        <MetricCard label={t.dashboards.sysadmin.systemHealth} value="OPTIMAL" icon="check_circle" metaText="0 FK violations" badgeColor="lime" />
         <MetricCard label="Platform Uptime" value={stats.uptime} icon="speed" badgeText="Local-First" />
       </div>
 

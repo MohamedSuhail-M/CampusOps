@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n/LanguageContext';
 import { AppSidebar, NavItem } from '../components/common/AppSidebar';
 import { AppTopbar } from '../components/common/AppTopbar';
 
@@ -10,6 +11,7 @@ interface RoleLayoutProps {
 
 export const RoleLayout: React.FC<RoleLayoutProps> = ({ allowedRoles }) => {
   const { user, activeRole, loading } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -44,62 +46,62 @@ export const RoleLayout: React.FC<RoleLayoutProps> = ({ allowedRoles }) => {
     switch (currentRole) {
       case 'STUDENT':
         return [
-          { id: 'home', label: 'Dashboard', icon: 'dashboard', path: '/app/student/home' },
-          { id: 'report', label: 'Report Issue', icon: 'add_circle', path: '/app/student/report' },
-          { id: 'reports', label: 'My Reports', icon: 'assignment', path: '/app/student/reports' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/student/alerts' },
-          { id: 'help', label: 'Help & Support', icon: 'help', path: '/app/student/help' },
+          { id: 'home', label: t.nav.dashboard, icon: 'dashboard', path: '/app/student/home' },
+          { id: 'report', label: t.nav.reportIssue, icon: 'add_circle', path: '/app/student/report' },
+          { id: 'reports', label: t.nav.myReports, icon: 'assignment', path: '/app/student/reports' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/student/alerts' },
+          { id: 'help', label: t.nav.help, icon: 'help', path: '/app/student/help' },
         ];
       case 'FACULTY':
         return [
-          { id: 'home', label: 'Overview', icon: 'dashboard', path: '/app/faculty/home' },
-          { id: 'timetable', label: 'My Timetable', icon: 'calendar_month', path: '/app/faculty/timetable' },
-          { id: 'report', label: 'Report Issue', icon: 'report_problem', path: '/app/faculty/report' },
-          { id: 'rooms', label: 'Room Passes', icon: 'swap_horiz', path: '/app/faculty/rooms' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/faculty/alerts' },
-          { id: 'help', label: 'Operations FAQ', icon: 'help', path: '/app/faculty/help' },
+          { id: 'home', label: t.nav.dashboard, icon: 'dashboard', path: '/app/faculty/home' },
+          { id: 'timetable', label: t.nav.timetable, icon: 'calendar_month', path: '/app/faculty/timetable' },
+          { id: 'report', label: t.nav.reportIssue, icon: 'report_problem', path: '/app/faculty/report' },
+          { id: 'rooms', label: t.nav.roomRequests, icon: 'swap_horiz', path: '/app/faculty/rooms' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/faculty/alerts' },
+          { id: 'help', label: t.nav.help, icon: 'help', path: '/app/faculty/help' },
         ];
       case 'TECHNICIAN':
         return [
-          { id: 'work-orders', label: 'Work Orders', icon: 'construction', path: '/app/technician/work-orders' },
-          { id: 'parts', label: 'Parts Requests', icon: 'inventory_2', path: '/app/technician/parts' },
-          { id: 'schedule', label: 'Schedule & Leave', icon: 'event_available', path: '/app/technician/schedule' },
-          { id: 'diagnostics', label: 'Diagnostic Tools', icon: 'terminal', path: '/app/technician/diagnostics' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/technician/alerts' },
+          { id: 'work-orders', label: t.nav.workOrders, icon: 'construction', path: '/app/technician/work-orders' },
+          { id: 'parts', label: t.nav.parts, icon: 'inventory_2', path: '/app/technician/parts' },
+          { id: 'schedule', label: t.nav.schedule, icon: 'event_available', path: '/app/technician/schedule' },
+          { id: 'diagnostics', label: t.nav.diagnostics, icon: 'terminal', path: '/app/technician/diagnostics' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/technician/alerts' },
         ];
       case 'DEPARTMENT_MANAGER':
         return [
-          { id: 'home', label: 'Dept Overview', icon: 'dashboard', path: '/app/dept-manager/home' },
-          { id: 'relocations', label: 'Relocations', icon: 'fact_check', path: '/app/dept-manager/relocations' },
-          { id: 'issues', label: 'Dept Issues', icon: 'report', path: '/app/dept-manager/issues' },
-          { id: 'rooms', label: 'Rooms & Matrix', icon: 'domain', path: '/app/dept-manager/rooms' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/dept-manager/alerts' },
+          { id: 'home', label: t.nav.dashboard, icon: 'dashboard', path: '/app/dept-manager/home' },
+          { id: 'relocations', label: t.nav.relocations, icon: 'fact_check', path: '/app/dept-manager/relocations' },
+          { id: 'issues', label: t.nav.deptIssues, icon: 'report', path: '/app/dept-manager/issues' },
+          { id: 'rooms', label: t.nav.rooms, icon: 'domain', path: '/app/dept-manager/rooms' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/dept-manager/alerts' },
         ];
       case 'FACILITIES_ADMIN':
       case 'FACILITIES_ADMINISTRATOR':
         return [
-          { id: 'triage', label: 'Incident Triage', icon: 'emergency', path: '/app/facilities/triage' },
-          { id: 'work-orders', label: 'Campus Orders', icon: 'assignment', path: '/app/facilities/work-orders' },
-          { id: 'rooms', label: 'Rooms & Outages', icon: 'meeting_room', path: '/app/facilities/rooms' },
-          { id: 'roster', label: 'Technician Roster', icon: 'engineering', path: '/app/facilities/roster' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/facilities/alerts' },
+          { id: 'triage', label: t.nav.incidentTriage, icon: 'emergency', path: '/app/facilities/triage' },
+          { id: 'work-orders', label: t.nav.workOrders, icon: 'assignment', path: '/app/facilities/work-orders' },
+          { id: 'rooms', label: t.nav.rooms, icon: 'meeting_room', path: '/app/facilities/rooms' },
+          { id: 'roster', label: t.nav.roster, icon: 'engineering', path: '/app/facilities/roster' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/facilities/alerts' },
         ];
       case 'PROCUREMENT_MANAGER':
         return [
-          { id: 'requests', label: 'Purchase Requests', icon: 'shopping_cart', path: '/app/procurement/requests' },
-          { id: 'receipts', label: 'Dock Receipts', icon: 'local_shipping', path: '/app/procurement/receipts' },
-          { id: 'inventory', label: 'Inventory Ledger', icon: 'inventory', path: '/app/procurement/inventory' },
-          { id: 'policies', label: 'Policy Rules', icon: 'gavel', path: '/app/procurement/policies' },
-          { id: 'alerts', label: 'Notifications', icon: 'notifications', path: '/app/procurement/alerts' },
+          { id: 'requests', label: t.nav.purchaseRequests, icon: 'shopping_cart', path: '/app/procurement/requests' },
+          { id: 'receipts', label: t.nav.stockReceipts, icon: 'local_shipping', path: '/app/procurement/receipts' },
+          { id: 'inventory', label: t.nav.inventory, icon: 'inventory', path: '/app/procurement/inventory' },
+          { id: 'policies', label: t.nav.policyRules, icon: 'gavel', path: '/app/procurement/policies' },
+          { id: 'alerts', label: t.nav.alerts, icon: 'notifications', path: '/app/procurement/alerts' },
         ];
       case 'SYSTEM_ADMIN':
       case 'SYSTEM_ADMINISTRATOR':
         return [
-          { id: 'overview', label: 'System Overview', icon: 'speed', path: '/app/sysadmin/overview' },
-          { id: 'data', label: 'Campus Data & QR', icon: 'qr_code_2', path: '/app/sysadmin/data' },
-          { id: 'audit', label: 'Audit Ledger', icon: 'lock', path: '/app/sysadmin/audit' },
-          { id: 'users', label: 'Users & Roles', icon: 'group', path: '/app/sysadmin/users' },
-          { id: 'integrations', label: 'Integrations', icon: 'hub', path: '/app/sysadmin/integrations' },
+          { id: 'overview', label: t.nav.systemOverview, icon: 'speed', path: '/app/sysadmin/overview' },
+          { id: 'data', label: t.nav.campusData, icon: 'qr_code_2', path: '/app/sysadmin/data' },
+          { id: 'audit', label: t.nav.auditSecurity, icon: 'lock', path: '/app/sysadmin/audit' },
+          { id: 'users', label: t.nav.usersRoles, icon: 'group', path: '/app/sysadmin/users' },
+          { id: 'integrations', label: t.nav.integrations, icon: 'hub', path: '/app/sysadmin/integrations' },
         ];
       default:
         return [];

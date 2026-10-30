@@ -19,17 +19,17 @@ export const UnauthorizedPage: React.FC = () => {
         </p>
         <div className="flex gap-3 justify-center pt-2 font-mono text-xs">
           <Link
-            to="/"
+            to="/app"
             className="px-5 py-2.5 bg-brandLime text-brandDark font-bold uppercase rounded-lg shadow-[3px_3px_0px_#0A0A0A] hover:bg-[#b0dc28]"
           >
-            Dashboard
+            My Dashboard
           </Link>
           <button
             type="button"
             onClick={() => logout()}
             className="px-5 py-2.5 bg-[#2A2A2A] hover:bg-[#333] text-brandCream font-bold uppercase rounded-lg border border-[#3A3A3A]"
           >
-            Switch Role
+            Switch Role / Re-login
           </button>
         </div>
       </div>
