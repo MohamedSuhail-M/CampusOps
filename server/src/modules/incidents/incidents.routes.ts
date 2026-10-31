@@ -187,6 +187,11 @@ router.patch('/:id/status', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN', 'TE
   try {
     const incident = await prisma.incident.findUnique({
       where: { id },
+      include: {
+        incidentReports: {
+          include: { intakeMessage: true },
+        },
+      },
     });
 
     if (!incident) {

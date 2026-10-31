@@ -548,14 +548,49 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+          {/* Safety Hazard Warning Banner */}
+          {triageData.triage?.safety_flags && triageData.triage.safety_flags.length > 0 && (
+            <div className="p-3 bg-red-950/70 border-2 border-red-600 rounded-xl text-xs font-mono text-red-200 flex items-start gap-2.5 animate-pulse shadow-[2px_2px_0px_#0A0A0A]">
+              <span className="material-symbols-outlined text-red-400 text-lg shrink-0">emergency</span>
+              <div className="space-y-1">
+                <span className="font-bold uppercase tracking-wider block text-red-300">
+                  Critical Safety Hazard Detected ({triageData.triage.safety_flags.join(', ')})
+                </span>
+                <p className="text-[11px] text-neutral-300">
+                  This report has been flagged for priority emergency response and campus safety dispatch.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Clarification Alert */}
+          {triageData.triage?.needs_clarification && triageData.triage.clarification_prompt && (
+            <div className="p-3 bg-blue-950/40 border border-blue-600/60 rounded-xl text-xs font-mono text-blue-200 flex items-start gap-2.5">
+              <span className="material-symbols-outlined text-blue-400 text-lg shrink-0">help</span>
+              <div className="space-y-1">
+                <span className="font-bold uppercase tracking-wider block text-blue-300">
+                  Clarification Recommended
+                </span>
+                <p className="text-[11px] text-neutral-300">
+                  {triageData.triage.clarification_prompt}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-mono text-xs">
             <div className="bg-[#1F1F1F] border border-[#2A2A2A] rounded-xl p-3">
               <span className="text-[10px] text-neutral-500 uppercase block mb-1">
                 {t.complaintForm.detectedCategory}
               </span>
-              <span className="text-brandCream font-bold text-sm">
+              <span className="text-brandCream font-bold text-sm block">
                 {triageData.triage?.category || 'GENERAL'}
               </span>
+              {triageData.triage?.subcategory && (
+                <span className="text-[10px] text-brandLime block mt-0.5 truncate">
+                  {triageData.triage.subcategory}
+                </span>
+              )}
             </div>
 
             <div className="bg-[#1F1F1F] border border-[#2A2A2A] rounded-xl p-3">
@@ -563,6 +598,18 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
                 {t.complaintForm.suggestedPriority}
               </span>
               <StatusBadge status={triageData.triage?.suggestedPriority || 'LOW'} />
+            </div>
+
+            <div className="bg-[#1F1F1F] border border-[#2A2A2A] rounded-xl p-3">
+              <span className="text-[10px] text-neutral-500 uppercase block mb-1">
+                Department & Skill
+              </span>
+              <span className="text-brandCream font-bold text-xs block">
+                {triageData.triage?.department || 'Facilities'}
+              </span>
+              <span className="text-[10px] text-neutral-400 block mt-0.5">
+                {triageData.triage?.requiredSkillName || 'General'}
+              </span>
             </div>
 
             <div className="bg-[#1F1F1F] border border-[#2A2A2A] rounded-xl p-3">
@@ -576,6 +623,16 @@ export const MultimodalComplaintForm: React.FC<MultimodalComplaintFormProps> = (
               </span>
             </div>
           </div>
+
+          {/* Contextual Reasoning */}
+          {triageData.triage?.explanation && (
+            <div className="p-3 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl text-xs font-mono text-neutral-300 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-neutral-500 block">AI Contextual Assessment:</span>
+              <p className="text-[11px] leading-relaxed text-neutral-300">
+                {triageData.triage.explanation}
+              </p>
+            </div>
+          )}
 
           {triageData.triage?.missingInformation && triageData.triage.missingInformation.length > 0 && (
             <div className="p-2.5 bg-yellow-950/20 border border-yellow-700/40 rounded-xl text-xs font-mono text-yellow-300 flex items-center gap-2">

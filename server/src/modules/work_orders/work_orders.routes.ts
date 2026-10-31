@@ -182,8 +182,17 @@ router.post('/', requireRole(['FACILITIES_ADMIN', 'SYSTEM_ADMIN']), async (req: 
         HVAC: 'SK03',
         PLUMBING: 'SK04',
         AUDIO_VISUAL: 'SK05',
+        AV: 'SK05',
+        FURNITURE_EQUIPMENT: 'SK06',
+        CLEANLINESS: 'SK06',
+        WATER_SANITATION: 'SK04',
+        CANTEEN_HYGIENE: 'SK06',
+        SAFETY_INCIDENT: 'SK06',
+        STUDENT_MISCONDUCT: 'SK06',
+        LOST_AND_FOUND: 'SK06',
+        GENERAL: 'SK06',
       };
-      skillId = categorySkillMap[incident.category.toUpperCase()] || 'SK01';
+      skillId = categorySkillMap[incident.category.toUpperCase()] || 'SK06';
     }
 
     const timestamp = Date.now();

@@ -210,6 +210,54 @@ export const ComplaintDetailsPage: React.FC = () => {
 
         {/* Right 1 Col: Metadata & Location */}
         <div className="space-y-6">
+          {/* AI Intelligence Triage Dossier Card */}
+          {complaint.aiMetadata && (
+            <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5 shadow-[4px_4px_0px_#0A0A0A] space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-display font-bold uppercase tracking-wider text-brandLime flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">psychology</span>
+                  AI Operations Triage
+                </span>
+                {complaint.aiMetadata.confidence && (
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-[#222] text-brandLime border border-[#333]">
+                    {Math.round(complaint.aiMetadata.confidence * 100)}% Confidence
+                  </span>
+                )}
+              </div>
+
+              {/* Safety Warning if present */}
+              {complaint.aiMetadata.safety_flags && complaint.aiMetadata.safety_flags.length > 0 && (
+                <div className="p-2.5 bg-red-950/60 border border-red-700/80 rounded-xl text-[11px] text-red-200 font-bold uppercase tracking-wider flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-red-400">warning</span>
+                  <span>Safety Hazard: {complaint.aiMetadata.safety_flags.join(', ')}</span>
+                </div>
+              )}
+
+              <div className="space-y-2 divide-y divide-[#2A2A2A]">
+                {complaint.aiMetadata.subcategory && (
+                  <div className="pt-2 flex justify-between">
+                    <span className="text-neutral-500">Subcategory:</span>
+                    <span className="text-brandCream font-bold">{complaint.aiMetadata.subcategory}</span>
+                  </div>
+                )}
+                {complaint.aiMetadata.department && (
+                  <div className="pt-2 flex justify-between">
+                    <span className="text-neutral-500">Department:</span>
+                    <span className="text-brandCream font-bold">{complaint.aiMetadata.department} ({complaint.aiMetadata.requiredSkillName || 'Technical'})</span>
+                  </div>
+                )}
+                {complaint.aiMetadata.reason && (
+                  <div className="pt-2 space-y-1">
+                    <span className="text-neutral-500 block text-[10px] uppercase">Reasoning:</span>
+                    <p className="text-[11px] text-neutral-300 leading-relaxed font-sans bg-[#1C1C1C] p-2.5 rounded-lg border border-[#2A2A2A]">
+                      {complaint.aiMetadata.reason}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Location & Equipment Card */}
           <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-5 shadow-[4px_4px_0px_#0A0A0A] space-y-3 font-mono text-xs">
             <span className="font-display font-bold uppercase tracking-wider text-brandCream block">

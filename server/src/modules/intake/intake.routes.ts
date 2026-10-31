@@ -113,7 +113,7 @@ router.post('/evidence', upload.array('photos', 3), async (req: Request, res: Re
 // GET /api/intake/evidence/:id (Secure photo retrieval with path traversal safety)
 router.get('/evidence/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const evidence = await prisma.evidence.findUnique({
       where: { id },
     });
@@ -508,7 +508,7 @@ router.get('/my-complaints', async (req: Request, res: Response) => {
 
 // GET /api/intake/:id (Detailed complaint fetch)
 router.get('/:id', async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = String(req.params.id);
 
   try {
     const message = await prisma.intakeMessage.findFirst({
@@ -545,7 +545,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    const report = message.incidentReports[0];
+    const report = (message as any).incidentReports?.[0];
     const inc = report?.incident;
 
     res.json({
@@ -559,7 +559,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         normalizedText: message.normalizedText,
         aiMetadata: message.aiMetadata ? JSON.parse(message.aiMetadata) : null,
         receivedAt: message.receivedAt,
-        evidence: message.evidence,
+        evidence: (message as any).evidence || [],
         incident: inc
           ? {
               id: inc.id,
