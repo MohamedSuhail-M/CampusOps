@@ -12,8 +12,10 @@ const router = Router();
 
 router.use(authenticate);
 
-// Configure Uploads directory for photo evidence
-const uploadsDir = path.resolve(__dirname, '../../../../data/uploads/evidence');
+// Configure Uploads directory for photo evidence (uses /tmp on Vercel)
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'campusops-evidence')
+  : path.resolve(__dirname, '../../../../data/uploads/evidence');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }

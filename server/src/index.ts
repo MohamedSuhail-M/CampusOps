@@ -23,7 +23,18 @@ const PORT = process.env.PORT || 4000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(cors({
-  origin: CLIENT_URL,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      origin === CLIENT_URL ||
+      origin.includes('localhost') ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('127.0.0.1')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -80,7 +91,7 @@ app.get('/api/test/admin-only', authenticate, requireRole(['SYSTEM_ADMIN']), (re
   res.json({ success: true, message: 'Welcome admin!', user: req.user?.name });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`[CampusOps Server] Listening on http://localhost:${PORT}`);
   });

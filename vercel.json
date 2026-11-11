@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "prisma generate --schema=prisma/schema.prisma && npm run build --workspace=client",
+  "outputDirectory": "client/dist",
+  "framework": "vite",
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "prisma/**",
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/((?!api/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
