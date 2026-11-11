@@ -121,7 +121,9 @@ router.get('/audit-logs', async (req: Request, res: Response) => {
  */
 router.get('/system-health', async (req: Request, res: Response) => {
   try {
-    const dbPath = path.resolve(__dirname, '../../../../prisma/dev.db');
+    const dbPath = process.env.VERCEL
+      ? '/tmp/dev.db'
+      : path.resolve(__dirname, '../../../../prisma/dev.db');
     let dbSizeBytes = 0;
     if (fs.existsSync(dbPath)) {
       const stats = fs.statSync(dbPath);
