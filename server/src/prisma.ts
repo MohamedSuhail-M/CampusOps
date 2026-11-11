@@ -16,21 +16,30 @@ function resolveDatabaseUrl(): string {
   // If running in Vercel Serverless Function, file system is read-only except /tmp
   if (process.env.VERCEL) {
     const tmpDbPath = '/tmp/dev.db';
-    if (!fs.existsSync(tmpDbPath)) {
+    const needCopy = !fs.existsSync(tmpDbPath) || fs.statSync(tmpDbPath).size < 10000;
+    if (needCopy) {
       const candidates = [
         path.join(process.cwd(), 'prisma', 'dev.db'),
+        path.join(process.cwd(), 'prisma', 'dev.db.backup'),
+        '/var/task/prisma/dev.db',
+        '/var/task/prisma/dev.db.backup',
         path.resolve(__dirname, '../../prisma/dev.db'),
         path.resolve(__dirname, '../../../prisma/dev.db'),
         path.resolve(__dirname, '../prisma/dev.db'),
+        path.resolve(__dirname, 'prisma/dev.db'),
         path.resolve(__dirname, 'dev.db'),
+        path.resolve(__dirname, 'dev.db.backup'),
       ];
 
       for (const p of candidates) {
         if (fs.existsSync(p)) {
           try {
-            fs.copyFileSync(p, tmpDbPath);
-            console.log(`[CampusOps] Copied SQLite database to ${tmpDbPath} from ${p}`);
-            break;
+            const stat = fs.statSync(p);
+            if (stat.size > 10000) {
+              fs.copyFileSync(p, tmpDbPath);
+              console.log(`[CampusOps] Successfully copied SQLite database to ${tmpDbPath} from ${p} (${stat.size} bytes)`);
+              break;
+            }
           } catch (err) {
             console.error(`[CampusOps] Error copying database from ${p}:`, err);
           }

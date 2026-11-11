@@ -17,6 +17,8 @@ build/
 
 # Database & Uploads
 *.db
+!prisma/dev.db
+!prisma/dev.db.backup
 *.db-journal
 *.db-wal
 *.db-shm

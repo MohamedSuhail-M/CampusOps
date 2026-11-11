@@ -42,14 +42,32 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'CampusOps Core API is online',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0',
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const userCount = await prisma.user.count();
+    const roleCount = await prisma.role.count();
+    res.json({
+      success: true,
+      message: 'CampusOps Core API is online',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      version: '1.0.0',
+      database: {
+        status: 'CONNECTED',
+        usersCount: userCount,
+        rolesCount: roleCount,
+        url: process.env.DATABASE_URL?.startsWith('file:/tmp')
+          ? 'SQLite (/tmp/dev.db)'
+          : (process.env.DATABASE_URL || 'file:./dev.db'),
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: 'CampusOps API is running but database connection failed',
+      error: err.message,
+    });
+  }
 });
 
 // Authentication routes
